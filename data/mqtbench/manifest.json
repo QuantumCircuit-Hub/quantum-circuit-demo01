@@ -1,0 +1,96 @@
+{
+  "source": "MQT Bench",
+  "total_circuits": 10,
+  "circuits": [
+    {
+      "circuit_id": "qch:mqt:ghz:3:v1",
+      "logical_name": "mqt_ghz_3",
+      "benchmark": "ghz",
+      "circuit_size": 3,
+      "benchmark_level": "ALG",
+      "raw_file": "raw/ghz_3.qasm",
+      "metadata_file": "processed/ghz_3.json"
+    },
+    {
+      "circuit_id": "qch:mqt:ghz:5:v1",
+      "logical_name": "mqt_ghz_5",
+      "benchmark": "ghz",
+      "circuit_size": 5,
+      "benchmark_level": "ALG",
+      "raw_file": "raw/ghz_5.qasm",
+      "metadata_file": "processed/ghz_5.json"
+    },
+    {
+      "circuit_id": "qch:mqt:dj:3:v1",
+      "logical_name": "mqt_dj_3",
+      "benchmark": "dj",
+      "circuit_size": 3,
+      "benchmark_level": "ALG",
+      "raw_file": "raw/dj_3.qasm",
+      "metadata_file": "processed/dj_3.json"
+    },
+    {
+      "circuit_id": "qch:mqt:dj:5:v1",
+      "logical_name": "mqt_dj_5",
+      "benchmark": "dj",
+      "circuit_size": 5,
+      "benchmark_level": "ALG",
+      "raw_file": "raw/dj_5.qasm",
+      "metadata_file": "processed/dj_5.json"
+    },
+    {
+      "circuit_id": "qch:mqt:graphstate:3:v1",
+      "logical_name": "mqt_graphstate_3",
+      "benchmark": "graphstate",
+      "circuit_size": 3,
+      "benchmark_level": "ALG",
+      "raw_file": "raw/graphstate_3.qasm",
+      "metadata_file": "processed/graphstate_3.json"
+    },
+    {
+      "circuit_id": "qch:mqt:graphstate:5:v1",
+      "logical_name": "mqt_graphstate_5",
+      "benchmark": "graphstate",
+      "circuit_size": 5,
+      "benchmark_level": "ALG",
+      "raw_file": "raw/graphstate_5.qasm",
+      "metadata_file": "processed/graphstate_5.json"
+    },
+    {
+      "circuit_id": "qch:mqt:wstate:3:v1",
+      "logical_name": "mqt_wstate_3",
+      "benchmark": "wstate",
+      "circuit_size": 3,
+      "benchmark_level": "ALG",
+      "raw_file": "raw/wstate_3.qasm",
+      "metadata_file": "processed/wstate_3.json"
+    },
+    {
+      "circuit_id": "qch:mqt:wstate:5:v1",
+      "logical_name": "mqt_wstate_5",
+      "benchmark": "wstate",
+      "circuit_size": 5,
+      "benchmark_level": "ALG",
+      "raw_file": "raw/wstate_5.qasm",
+      "metadata_file": "processed/wstate_5.json"
+    },
+    {
+      "circuit_id": "qch:mqt:qftentangled:3:v1",
+      "logical_name": "mqt_qftentangled_3",
+      "benchmark": "qftentangled",
+      "circuit_size": 3,
+      "benchmark_level": "ALG",
+      "raw_file": "raw/qftentangled_3.qasm",
+      "metadata_file": "processed/qftentangled_3.json"
+    },
+    {
+      "circuit_id": "qch:mqt:qftentangled:5:v1",
+      "logical_name": "mqt_qftentangled_5",
+      "benchmark": "qftentangled",
+      "circuit_size": 5,
+      "benchmark_level": "ALG",
+      "raw_file": "raw/qftentangled_5.qasm",
+      "metadata_file": "processed/qftentangled_5.json"
+    }
+  ]
+}

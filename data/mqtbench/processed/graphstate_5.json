@@ -1,0 +1,39 @@
+{
+  "circuit_id": "qch:mqt:graphstate:5:v1",
+  "logical_name": "mqt_graphstate_5",
+  "version": "v1",
+  "source": {
+    "dataset": "MQT Bench",
+    "generator": "mqt-bench",
+    "benchmark": "graphstate",
+    "benchmark_level": "ALG",
+    "circuit_size": 5,
+    "original_file": "graphstate_5.qasm"
+  },
+  "provenance": {
+    "parent_version": null,
+    "transformation": "original_generation",
+    "tool": "mqt-bench",
+    "tool_version": "2.2.3",
+    "parameters": {
+      "benchmark": "graphstate",
+      "level": "ALG",
+      "circuit_size": 5,
+      "opt_level": 2,
+      "random_parameters": false
+    }
+  },
+  "metrics": {
+    "num_qubits": 5,
+    "gate_count": 16,
+    "depth": 6,
+    "num_1q_gates": 10,
+    "num_2q_gates": 5,
+    "gate_histogram": {
+      "h": 5,
+      "cz": 5,
+      "measure": 5,
+      "barrier": 1
+    }
+  }
+}

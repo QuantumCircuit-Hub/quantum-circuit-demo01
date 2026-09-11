@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+
+# Virtual environment
+.venv/
+
+# data/raw and data/processed only ever hold the small, hand-authored
+# qft_3 demo circuit (Phases 1-3) and ARE committed -- the app needs them
+# to run. Bulk/generated MQT Bench data lives under data/mqtbench/
+# instead and was never excluded by this file.
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

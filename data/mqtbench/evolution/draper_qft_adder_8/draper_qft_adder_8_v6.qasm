@@ -1,0 +1,33 @@
+OPENQASM 2.0;
+include "qelib1.inc";
+gate circuit_42 q0,q1,q2,q3 { h q3; cp(pi/2) q3,q2; cp(pi/4) q3,q1; cp(pi/8) q3,q0; h q2; cp(pi/2) q2,q1; cp(pi/4) q2,q0; h q1; cp(pi/2) q1,q0; h q0; }
+gate circuit_42_dg q0,q1,q2,q3 { h q0; cp(-pi/2) q1,q0; h q1; cp(-pi/4) q2,q0; cp(-pi/2) q2,q1; h q2; cp(-pi/8) q3,q0; cp(-pi/4) q3,q1; cp(-pi/2) q3,q2; h q3; }
+qreg q[8];
+creg meas[8];
+circuit_42 q[5],q[3],q[2],q[6];
+cp(pi) q[4],q[5];
+cp(pi/2) q[4],q[3];
+swap q[3],q[2];
+cp(pi) q[1],q[2];
+cp(pi/4) q[4],q[3];
+swap q[2],q[3];
+cp(pi/2) q[1],q[2];
+swap q[1],q[0];
+cp(pi) q[1],q[2];
+swap q[5],q[4];
+cp(pi/8) q[5],q[6];
+swap q[7],q[6];
+cp(pi/4) q[0],q[7];
+swap q[0],q[1];
+cp(pi/2) q[0],q[7];
+cp(pi) q[6],q[7];
+circuit_42_dg q[4],q[3],q[2],q[7];
+barrier q[5],q[1],q[0],q[6],q[4],q[3],q[2],q[7];
+measure q[5] -> meas[0];
+measure q[1] -> meas[1];
+measure q[0] -> meas[2];
+measure q[6] -> meas[3];
+measure q[4] -> meas[4];
+measure q[3] -> meas[5];
+measure q[2] -> meas[6];
+measure q[7] -> meas[7];

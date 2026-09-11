@@ -1,0 +1,25 @@
+{
+  "circuit_id": "qch:qft_3:v1",
+  "logical_name": "qft_3",
+  "version": "v1",
+  "source": {
+    "dataset": "local_sample",
+    "original_file": "sample_qft_3.qasm"
+  },
+  "provenance": {
+    "parent_version": null,
+    "transformation": "original"
+  },
+  "metrics": {
+    "num_qubits": 3,
+    "gate_count": 7,
+    "depth": 6,
+    "num_1q_gates": 3,
+    "num_2q_gates": 4,
+    "gate_histogram": {
+      "h": 3,
+      "cu1": 3,
+      "swap": 1
+    }
+  }
+}

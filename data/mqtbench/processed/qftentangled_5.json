@@ -1,0 +1,40 @@
+{
+  "circuit_id": "qch:mqt:qftentangled:5:v1",
+  "logical_name": "mqt_qftentangled_5",
+  "version": "v1",
+  "source": {
+    "dataset": "MQT Bench",
+    "generator": "mqt-bench",
+    "benchmark": "qftentangled",
+    "benchmark_level": "ALG",
+    "circuit_size": 5,
+    "original_file": "qftentangled_5.qasm"
+  },
+  "provenance": {
+    "parent_version": null,
+    "transformation": "original_generation",
+    "tool": "mqt-bench",
+    "tool_version": "2.2.3",
+    "parameters": {
+      "benchmark": "qftentangled",
+      "level": "ALG",
+      "circuit_size": 5,
+      "opt_level": 2,
+      "random_parameters": false
+    }
+  },
+  "metrics": {
+    "num_qubits": 5,
+    "gate_count": 12,
+    "depth": 7,
+    "num_1q_gates": 6,
+    "num_2q_gates": 4,
+    "gate_histogram": {
+      "measure": 5,
+      "cx": 4,
+      "h": 1,
+      "qft": 1,
+      "barrier": 1
+    }
+  }
+}

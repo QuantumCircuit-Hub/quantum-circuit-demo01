@@ -1,0 +1,40 @@
+{
+  "circuit_id": "qch:mqt:draper_qft_adder:8:v1",
+  "logical_name": "mqt_draper_qft_adder_8",
+  "version": "v1",
+  "source": {
+    "dataset": "MQT Bench",
+    "generator": "mqt-bench",
+    "benchmark": "draper_qft_adder",
+    "benchmark_level": "ALG",
+    "circuit_size": 8,
+    "original_file": "draper_qft_adder_8.qasm"
+  },
+  "provenance": {
+    "parent_version": null,
+    "transformation": "original_generation",
+    "tool": "mqt-bench",
+    "tool_version": "2.2.3",
+    "parameters": {
+      "benchmark": "draper_qft_adder",
+      "level": "ALG",
+      "circuit_size": 8,
+      "opt_level": 2,
+      "random_parameters": false
+    }
+  },
+  "metrics": {
+    "num_qubits": 8,
+    "gate_count": 21,
+    "depth": 10,
+    "num_1q_gates": 8,
+    "num_2q_gates": 10,
+    "gate_histogram": {
+      "cp": 10,
+      "measure": 8,
+      "circuit-42": 1,
+      "circuit-42_dg": 1,
+      "barrier": 1
+    }
+  }
+}

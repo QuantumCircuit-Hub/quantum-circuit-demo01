@@ -1,0 +1,40 @@
+{
+  "circuit_id": "qch:mqt:dj:5:v1",
+  "logical_name": "mqt_dj_5",
+  "version": "v1",
+  "source": {
+    "dataset": "MQT Bench",
+    "generator": "mqt-bench",
+    "benchmark": "dj",
+    "benchmark_level": "ALG",
+    "circuit_size": 5,
+    "original_file": "dj_5.qasm"
+  },
+  "provenance": {
+    "parent_version": null,
+    "transformation": "original_generation",
+    "tool": "mqt-bench",
+    "tool_version": "2.2.3",
+    "parameters": {
+      "benchmark": "dj",
+      "level": "ALG",
+      "circuit_size": 5,
+      "opt_level": 2,
+      "random_parameters": false
+    }
+  },
+  "metrics": {
+    "num_qubits": 5,
+    "gate_count": 16,
+    "depth": 5,
+    "num_1q_gates": 14,
+    "num_2q_gates": 0,
+    "gate_histogram": {
+      "h": 9,
+      "measure": 4,
+      "x": 1,
+      "Oracle": 1,
+      "barrier": 1
+    }
+  }
+}

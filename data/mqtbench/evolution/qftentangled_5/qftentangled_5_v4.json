@@ -1,0 +1,48 @@
+{
+  "circuit_id": "qch:mqt:qftentangled:5:v4",
+  "logical_name": "mqt_qftentangled_5",
+  "version": "v4",
+  "source": {
+    "dataset": "MQT Bench",
+    "generator": "mqt-bench",
+    "benchmark": "qftentangled",
+    "benchmark_level": "ALG",
+    "circuit_size": 5,
+    "original_file": "qftentangled_5.qasm"
+  },
+  "provenance": {
+    "parent_version": "qch:mqt:qftentangled:5:v1",
+    "transformation": "qiskit_transpile",
+    "tool": "qiskit",
+    "tool_version": "2.5.2",
+    "parameters": {
+      "optimization_level": 3
+    },
+    "seed_transpiler": 42
+  },
+  "metrics": {
+    "num_qubits": 5,
+    "gate_count": 12,
+    "depth": 7,
+    "num_1q_gates": 6,
+    "num_2q_gates": 4,
+    "gate_histogram": {
+      "measure": 5,
+      "cx": 4,
+      "h": 1,
+      "qft": 1,
+      "barrier": 1
+    }
+  },
+  "evolution_metrics": {
+    "swap_count": 0,
+    "cx_count": 4,
+    "two_qubit_gate_count": 4,
+    "multi_qubit_gate_count": 2,
+    "physical_layout": null,
+    "layout_identity": null,
+    "coupling_map": null,
+    "topology": null,
+    "circuit_fingerprint": "sha256:e18007bd3a7f29797a22232fa92300ec14382885497695e5d0905a7f78347bb1"
+  }
+}

@@ -1,0 +1,147 @@
+{
+  "logical_circuit": "mqt_ghz_5",
+  "root": "qch:mqt:ghz:5:v1",
+  "nodes": [
+    "qch:mqt:ghz:5:v1",
+    "qch:mqt:ghz:5:v2",
+    "qch:mqt:ghz:5:v3",
+    "qch:mqt:ghz:5:v4",
+    "qch:mqt:ghz:5:v5",
+    "qch:mqt:ghz:5:v6"
+  ],
+  "edges": [
+    {
+      "from": "qch:mqt:ghz:5:v1",
+      "to": "qch:mqt:ghz:5:v2",
+      "transformation": "qiskit_transpile",
+      "parameters": {
+        "optimization_level": 1
+      },
+      "tool": "qiskit",
+      "tool_version": "2.5.2",
+      "seed_transpiler": 42
+    },
+    {
+      "from": "qch:mqt:ghz:5:v1",
+      "to": "qch:mqt:ghz:5:v3",
+      "transformation": "qiskit_transpile",
+      "parameters": {
+        "optimization_level": 2
+      },
+      "tool": "qiskit",
+      "tool_version": "2.5.2",
+      "seed_transpiler": 42
+    },
+    {
+      "from": "qch:mqt:ghz:5:v1",
+      "to": "qch:mqt:ghz:5:v4",
+      "transformation": "qiskit_transpile",
+      "parameters": {
+        "optimization_level": 3
+      },
+      "tool": "qiskit",
+      "tool_version": "2.5.2",
+      "seed_transpiler": 42
+    },
+    {
+      "from": "qch:mqt:ghz:5:v4",
+      "to": "qch:mqt:ghz:5:v5",
+      "transformation": "hardware_mapping",
+      "parameters": {
+        "optimization_level": 3,
+        "coupling_map": [
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            3
+          ],
+          [
+            3,
+            2
+          ],
+          [
+            3,
+            4
+          ],
+          [
+            4,
+            3
+          ]
+        ],
+        "topology": "linear"
+      },
+      "tool": "qiskit",
+      "tool_version": "2.5.2",
+      "seed_transpiler": 42
+    },
+    {
+      "from": "qch:mqt:ghz:5:v4",
+      "to": "qch:mqt:ghz:5:v6",
+      "transformation": "hardware_mapping",
+      "parameters": {
+        "optimization_level": 3,
+        "coupling_map": [
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            3
+          ],
+          [
+            3,
+            2
+          ],
+          [
+            3,
+            4
+          ],
+          [
+            4,
+            3
+          ],
+          [
+            0,
+            4
+          ],
+          [
+            4,
+            0
+          ]
+        ],
+        "topology": "ring"
+      },
+      "tool": "qiskit",
+      "tool_version": "2.5.2",
+      "seed_transpiler": 42
+    }
+  ]
+}

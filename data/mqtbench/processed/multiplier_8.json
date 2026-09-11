@@ -1,0 +1,38 @@
+{
+  "circuit_id": "qch:mqt:multiplier:8:v1",
+  "logical_name": "mqt_multiplier_8",
+  "version": "v1",
+  "source": {
+    "dataset": "MQT Bench",
+    "generator": "mqt-bench",
+    "benchmark": "multiplier",
+    "benchmark_level": "ALG",
+    "circuit_size": 8,
+    "original_file": "multiplier_8.qasm"
+  },
+  "provenance": {
+    "parent_version": null,
+    "transformation": "original_generation",
+    "tool": "mqt-bench",
+    "tool_version": "2.2.3",
+    "parameters": {
+      "benchmark": "multiplier",
+      "level": "ALG",
+      "circuit_size": 8,
+      "opt_level": 2,
+      "random_parameters": false
+    }
+  },
+  "metrics": {
+    "num_qubits": 8,
+    "gate_count": 10,
+    "depth": 2,
+    "num_1q_gates": 8,
+    "num_2q_gates": 0,
+    "gate_histogram": {
+      "measure": 8,
+      "Multiplier": 1,
+      "barrier": 1
+    }
+  }
+}

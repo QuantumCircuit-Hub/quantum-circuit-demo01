@@ -1,0 +1,48 @@
+{
+  "circuit_id": "qch:mqt:draper_qft_adder:8:v2",
+  "logical_name": "mqt_draper_qft_adder_8",
+  "version": "v2",
+  "source": {
+    "dataset": "MQT Bench",
+    "generator": "mqt-bench",
+    "benchmark": "draper_qft_adder",
+    "benchmark_level": "ALG",
+    "circuit_size": 8,
+    "original_file": "draper_qft_adder_8.qasm"
+  },
+  "provenance": {
+    "parent_version": "qch:mqt:draper_qft_adder:8:v1",
+    "transformation": "qiskit_transpile",
+    "tool": "qiskit",
+    "tool_version": "2.5.2",
+    "parameters": {
+      "optimization_level": 1
+    },
+    "seed_transpiler": 42
+  },
+  "metrics": {
+    "num_qubits": 8,
+    "gate_count": 21,
+    "depth": 10,
+    "num_1q_gates": 8,
+    "num_2q_gates": 10,
+    "gate_histogram": {
+      "cp": 10,
+      "measure": 8,
+      "circuit-42": 1,
+      "circuit-42_dg": 1,
+      "barrier": 1
+    }
+  },
+  "evolution_metrics": {
+    "swap_count": 0,
+    "cx_count": 0,
+    "two_qubit_gate_count": 10,
+    "multi_qubit_gate_count": 3,
+    "physical_layout": null,
+    "layout_identity": null,
+    "coupling_map": null,
+    "topology": null,
+    "circuit_fingerprint": "sha256:43af86daa90acd074443d4f5bffc559e78bd361d63c59e1c222be24eb728b389"
+  }
+}

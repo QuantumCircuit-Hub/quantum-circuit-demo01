@@ -1,0 +1,79 @@
+{
+  "circuit_id": "qch:mqt:ghz:5:v6",
+  "logical_name": "mqt_ghz_5",
+  "version": "v6",
+  "source": {
+    "dataset": "MQT Bench",
+    "generator": "mqt-bench",
+    "benchmark": "ghz",
+    "benchmark_level": "ALG",
+    "circuit_size": 5,
+    "original_file": "ghz_5.qasm"
+  },
+  "provenance": {
+    "parent_version": "qch:mqt:ghz:5:v4",
+    "transformation": "hardware_mapping",
+    "tool": "qiskit",
+    "tool_version": "2.5.2",
+    "parameters": {
+      "optimization_level": 3,
+      "coupling_map": [
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          3,
+          2
+        ],
+        [
+          3,
+          4
+        ],
+        [
+          4,
+          3
+        ],
+        [
+          0,
+          4
+        ],
+        [
+          4,
+          0
+        ]
+      ],
+      "topology": "ring"
+    },
+    "seed_transpiler": 42
+  },
+  "metrics": {
+    "num_qubits": 5,
+    "gate_count": 11,
+    "depth": 6,
+    "num_1q_gates": 6,
+    "num_2q_gates": 4,
+    "gate_histogram": {
+      "measure": 5,
+      "cx": 4,
+      "h": 1,
+      "barrier": 1
+    }
+  }
+}

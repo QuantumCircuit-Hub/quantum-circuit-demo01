@@ -1,0 +1,178 @@
+{
+  "circuit_id": "qch:mqt:multiplier:8:v5",
+  "logical_name": "mqt_multiplier_8",
+  "version": "v5",
+  "source": {
+    "dataset": "MQT Bench",
+    "generator": "mqt-bench",
+    "benchmark": "multiplier",
+    "benchmark_level": "ALG",
+    "circuit_size": 8,
+    "original_file": "multiplier_8.qasm"
+  },
+  "provenance": {
+    "parent_version": "qch:mqt:multiplier:8:v4",
+    "transformation": "hardware_mapping",
+    "tool": "qiskit",
+    "tool_version": "2.5.2",
+    "parameters": {
+      "optimization_level": 3
+    },
+    "seed_transpiler": 42,
+    "topology": "linear",
+    "coupling_map": [
+      [
+        0,
+        1
+      ],
+      [
+        1,
+        0
+      ],
+      [
+        1,
+        2
+      ],
+      [
+        2,
+        1
+      ],
+      [
+        2,
+        3
+      ],
+      [
+        3,
+        2
+      ],
+      [
+        3,
+        4
+      ],
+      [
+        4,
+        3
+      ],
+      [
+        4,
+        5
+      ],
+      [
+        5,
+        4
+      ],
+      [
+        5,
+        6
+      ],
+      [
+        6,
+        5
+      ],
+      [
+        6,
+        7
+      ],
+      [
+        7,
+        6
+      ]
+    ]
+  },
+  "metrics": {
+    "num_qubits": 8,
+    "gate_count": 138,
+    "depth": 111,
+    "num_1q_gates": 52,
+    "num_2q_gates": 70,
+    "gate_histogram": {
+      "cx": 45,
+      "p": 39,
+      "swap": 24,
+      "ccx": 9,
+      "measure": 8,
+      "rccx": 6,
+      "u2": 3,
+      "h": 2,
+      "unitary": 1,
+      "barrier": 1
+    }
+  },
+  "evolution_metrics": {
+    "swap_count": 24,
+    "cx_count": 45,
+    "two_qubit_gate_count": 70,
+    "multi_qubit_gate_count": 16,
+    "physical_layout": {
+      "0": 1,
+      "1": 4,
+      "2": 6,
+      "3": 3,
+      "4": 0,
+      "5": 5,
+      "6": 2,
+      "7": 7
+    },
+    "layout_identity": false,
+    "coupling_map": [
+      [
+        0,
+        1
+      ],
+      [
+        1,
+        0
+      ],
+      [
+        1,
+        2
+      ],
+      [
+        2,
+        1
+      ],
+      [
+        2,
+        3
+      ],
+      [
+        3,
+        2
+      ],
+      [
+        3,
+        4
+      ],
+      [
+        4,
+        3
+      ],
+      [
+        4,
+        5
+      ],
+      [
+        5,
+        4
+      ],
+      [
+        5,
+        6
+      ],
+      [
+        6,
+        5
+      ],
+      [
+        6,
+        7
+      ],
+      [
+        7,
+        6
+      ]
+    ],
+    "topology": "linear",
+    "circuit_fingerprint": "sha256:363f4800f75c8492a542d537be91962ba8881f689cebde2ca59a6f391c42be23"
+  }
+}

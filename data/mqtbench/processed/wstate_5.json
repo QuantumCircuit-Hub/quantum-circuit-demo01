@@ -1,0 +1,41 @@
+{
+  "circuit_id": "qch:mqt:wstate:5:v1",
+  "logical_name": "mqt_wstate_5",
+  "version": "v1",
+  "source": {
+    "dataset": "MQT Bench",
+    "generator": "mqt-bench",
+    "benchmark": "wstate",
+    "benchmark_level": "ALG",
+    "circuit_size": 5,
+    "original_file": "wstate_5.qasm"
+  },
+  "provenance": {
+    "parent_version": null,
+    "transformation": "original_generation",
+    "tool": "mqt-bench",
+    "tool_version": "2.2.3",
+    "parameters": {
+      "benchmark": "wstate",
+      "level": "ALG",
+      "circuit_size": 5,
+      "opt_level": 2,
+      "random_parameters": false
+    }
+  },
+  "metrics": {
+    "num_qubits": 5,
+    "gate_count": 23,
+    "depth": 11,
+    "num_1q_gates": 14,
+    "num_2q_gates": 8,
+    "gate_histogram": {
+      "ry": 8,
+      "measure": 5,
+      "cz": 4,
+      "cx": 4,
+      "x": 1,
+      "barrier": 1
+    }
+  }
+}

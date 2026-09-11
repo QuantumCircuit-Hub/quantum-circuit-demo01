@@ -1,0 +1,44 @@
+{
+  "logical_circuit": "qft_3",
+  "nodes": [
+    "qch:qft_3:v1",
+    "qch:qft_3:v2",
+    "qch:qft_3:v3"
+  ],
+  "edges": [
+    {
+      "from": "qch:qft_3:v1",
+      "to": "qch:qft_3:v2",
+      "transformation": "qiskit_transpile",
+      "parameters": {
+        "optimization_level": 3
+      }
+    },
+    {
+      "from": "qch:qft_3:v2",
+      "to": "qch:qft_3:v3",
+      "transformation": "hardware_mapping",
+      "parameters": {
+        "optimization_level": 3,
+        "coupling_map": [
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            1
+          ]
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,52 @@
+{
+  "circuit_id": "qch:mqt:multiplier:8:v4",
+  "logical_name": "mqt_multiplier_8",
+  "version": "v4",
+  "source": {
+    "dataset": "MQT Bench",
+    "generator": "mqt-bench",
+    "benchmark": "multiplier",
+    "benchmark_level": "ALG",
+    "circuit_size": 8,
+    "original_file": "multiplier_8.qasm"
+  },
+  "provenance": {
+    "parent_version": "qch:mqt:multiplier:8:v1",
+    "transformation": "qiskit_transpile",
+    "tool": "qiskit",
+    "tool_version": "2.5.2",
+    "parameters": {
+      "optimization_level": 3
+    },
+    "seed_transpiler": 42
+  },
+  "metrics": {
+    "num_qubits": 8,
+    "gate_count": 114,
+    "depth": 95,
+    "num_1q_gates": 52,
+    "num_2q_gates": 46,
+    "gate_histogram": {
+      "cx": 45,
+      "p": 39,
+      "ccx": 9,
+      "measure": 8,
+      "rccx": 6,
+      "u2": 3,
+      "h": 2,
+      "unitary": 1,
+      "barrier": 1
+    }
+  },
+  "evolution_metrics": {
+    "swap_count": 0,
+    "cx_count": 45,
+    "two_qubit_gate_count": 46,
+    "multi_qubit_gate_count": 16,
+    "physical_layout": null,
+    "layout_identity": null,
+    "coupling_map": null,
+    "topology": null,
+    "circuit_fingerprint": "sha256:5a5ad8f01b9be93493b76e210ab402d83e476cd018b14426e971bdb78334672e"
+  }
+}

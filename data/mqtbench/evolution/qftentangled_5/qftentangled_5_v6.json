@@ -1,0 +1,138 @@
+{
+  "circuit_id": "qch:mqt:qftentangled:5:v6",
+  "logical_name": "mqt_qftentangled_5",
+  "version": "v6",
+  "source": {
+    "dataset": "MQT Bench",
+    "generator": "mqt-bench",
+    "benchmark": "qftentangled",
+    "benchmark_level": "ALG",
+    "circuit_size": 5,
+    "original_file": "qftentangled_5.qasm"
+  },
+  "provenance": {
+    "parent_version": "qch:mqt:qftentangled:5:v4",
+    "transformation": "hardware_mapping",
+    "tool": "qiskit",
+    "tool_version": "2.5.2",
+    "parameters": {
+      "optimization_level": 3
+    },
+    "seed_transpiler": 42,
+    "topology": "ring",
+    "coupling_map": [
+      [
+        0,
+        1
+      ],
+      [
+        1,
+        0
+      ],
+      [
+        1,
+        2
+      ],
+      [
+        2,
+        1
+      ],
+      [
+        2,
+        3
+      ],
+      [
+        3,
+        2
+      ],
+      [
+        3,
+        4
+      ],
+      [
+        4,
+        3
+      ],
+      [
+        0,
+        4
+      ],
+      [
+        4,
+        0
+      ]
+    ]
+  },
+  "metrics": {
+    "num_qubits": 5,
+    "gate_count": 12,
+    "depth": 7,
+    "num_1q_gates": 6,
+    "num_2q_gates": 4,
+    "gate_histogram": {
+      "measure": 5,
+      "cx": 4,
+      "h": 1,
+      "qft": 1,
+      "barrier": 1
+    }
+  },
+  "evolution_metrics": {
+    "swap_count": 0,
+    "cx_count": 4,
+    "two_qubit_gate_count": 4,
+    "multi_qubit_gate_count": 2,
+    "physical_layout": {
+      "0": 4,
+      "1": 0,
+      "2": 1,
+      "3": 2,
+      "4": 3
+    },
+    "layout_identity": false,
+    "coupling_map": [
+      [
+        0,
+        1
+      ],
+      [
+        1,
+        0
+      ],
+      [
+        1,
+        2
+      ],
+      [
+        2,
+        1
+      ],
+      [
+        2,
+        3
+      ],
+      [
+        3,
+        2
+      ],
+      [
+        3,
+        4
+      ],
+      [
+        4,
+        3
+      ],
+      [
+        0,
+        4
+      ],
+      [
+        4,
+        0
+      ]
+    ],
+    "topology": "ring",
+    "circuit_fingerprint": "sha256:3eb1500882f55de446ff7d501bd8e7ce7bd9fd3b0b3805a8c6ca2e2c18f264d0"
+  }
+}

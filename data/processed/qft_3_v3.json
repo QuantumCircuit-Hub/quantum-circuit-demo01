@@ -1,0 +1,48 @@
+{
+  "circuit_id": "qch:qft_3:v3",
+  "logical_name": "qft_3",
+  "version": "v3",
+  "source": {
+    "dataset": "derived",
+    "derived_from": "qch:qft_3:v2"
+  },
+  "provenance": {
+    "parent_version": "qch:qft_3:v2",
+    "transformation": "hardware_mapping",
+    "tool": "qiskit",
+    "tool_version": "2.5.2",
+    "parameters": {
+      "optimization_level": 3,
+      "coupling_map": [
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          1
+        ]
+      ]
+    }
+  },
+  "metrics": {
+    "num_qubits": 3,
+    "gate_count": 7,
+    "depth": 6,
+    "num_1q_gates": 3,
+    "num_2q_gates": 4,
+    "gate_histogram": {
+      "h": 3,
+      "cu1": 3,
+      "swap": 1
+    }
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "circuit_id": "qch:qft_3:v2",
+  "logical_name": "qft_3",
+  "version": "v2",
+  "source": {
+    "dataset": "derived",
+    "derived_from": "qch:qft_3:v1"
+  },
+  "provenance": {
+    "parent_version": "qch:qft_3:v1",
+    "transformation": "qiskit_transpile",
+    "tool": "qiskit",
+    "tool_version": "2.5.2",
+    "parameters": {
+      "optimization_level": 3
+    }
+  },
+  "metrics": {
+    "num_qubits": 3,
+    "gate_count": 6,
+    "depth": 5,
+    "num_1q_gates": 3,
+    "num_2q_gates": 3,
+    "gate_histogram": {
+      "h": 3,
+      "cu1": 3
+    }
+  }
+}

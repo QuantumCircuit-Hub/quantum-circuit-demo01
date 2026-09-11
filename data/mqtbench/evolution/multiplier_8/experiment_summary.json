@@ -1,0 +1,360 @@
+{
+  "research_question": "How do optimization strategy and hardware topology affect the evolution of the same logical quantum circuit?",
+  "root_circuit": "qch:mqt:multiplier:8:v1",
+  "experimental_conditions": {
+    "qiskit_version": "2.5.2",
+    "mqt_bench_version": "2.2.3",
+    "seed_transpiler": 42,
+    "optimization_levels": {
+      "v2": 1,
+      "v3": 2,
+      "v4": 3
+    },
+    "hardware_topologies": {
+      "v5": "linear",
+      "v6": "ring"
+    }
+  },
+  "interaction_graph": {
+    "num_qubits": 8,
+    "num_edges": 0,
+    "edges": [],
+    "degree": {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0,
+      "5": 0,
+      "6": 0,
+      "7": 0
+    }
+  },
+  "results": {
+    "metrics": {
+      "v1": {
+        "num_qubits": 8,
+        "gate_count": 10,
+        "depth": 2,
+        "num_1q_gates": 8,
+        "num_2q_gates": 0,
+        "gate_histogram": {
+          "measure": 8,
+          "Multiplier": 1,
+          "barrier": 1
+        }
+      },
+      "v2": {
+        "num_qubits": 8,
+        "gate_count": 121,
+        "depth": 100,
+        "num_1q_gates": 55,
+        "num_2q_gates": 50,
+        "gate_histogram": {
+          "cx": 50,
+          "p": 41,
+          "ccx": 9,
+          "measure": 8,
+          "rccx": 6,
+          "u2": 4,
+          "h": 2,
+          "barrier": 1
+        }
+      },
+      "v3": {
+        "num_qubits": 8,
+        "gate_count": 114,
+        "depth": 95,
+        "num_1q_gates": 52,
+        "num_2q_gates": 46,
+        "gate_histogram": {
+          "cx": 45,
+          "p": 39,
+          "ccx": 9,
+          "measure": 8,
+          "rccx": 6,
+          "u2": 3,
+          "h": 2,
+          "unitary": 1,
+          "barrier": 1
+        }
+      },
+      "v4": {
+        "num_qubits": 8,
+        "gate_count": 114,
+        "depth": 95,
+        "num_1q_gates": 52,
+        "num_2q_gates": 46,
+        "gate_histogram": {
+          "cx": 45,
+          "p": 39,
+          "ccx": 9,
+          "measure": 8,
+          "rccx": 6,
+          "u2": 3,
+          "h": 2,
+          "unitary": 1,
+          "barrier": 1
+        }
+      },
+      "v5": {
+        "num_qubits": 8,
+        "gate_count": 138,
+        "depth": 111,
+        "num_1q_gates": 52,
+        "num_2q_gates": 70,
+        "gate_histogram": {
+          "cx": 45,
+          "p": 39,
+          "swap": 24,
+          "ccx": 9,
+          "measure": 8,
+          "rccx": 6,
+          "u2": 3,
+          "h": 2,
+          "unitary": 1,
+          "barrier": 1
+        }
+      },
+      "v6": {
+        "num_qubits": 8,
+        "gate_count": 137,
+        "depth": 114,
+        "num_1q_gates": 52,
+        "num_2q_gates": 69,
+        "gate_histogram": {
+          "cx": 45,
+          "p": 39,
+          "swap": 23,
+          "ccx": 9,
+          "measure": 8,
+          "rccx": 6,
+          "u2": 3,
+          "h": 2,
+          "unitary": 1,
+          "barrier": 1
+        }
+      }
+    },
+    "evolution_metrics": {
+      "v1": {
+        "swap_count": 0,
+        "cx_count": 0,
+        "two_qubit_gate_count": 0,
+        "multi_qubit_gate_count": 2,
+        "physical_layout": null,
+        "layout_identity": null,
+        "coupling_map": null,
+        "topology": null,
+        "circuit_fingerprint": "sha256:be10f2bf930b2bd8cd1810043fa37ce96fa5e3ec1d1cfbec30f879cf50b6b3ce"
+      },
+      "v2": {
+        "swap_count": 0,
+        "cx_count": 50,
+        "two_qubit_gate_count": 50,
+        "multi_qubit_gate_count": 16,
+        "physical_layout": null,
+        "layout_identity": null,
+        "coupling_map": null,
+        "topology": null,
+        "circuit_fingerprint": "sha256:89d2730361c7204942776140ae75ad41d7aa637ef4714f9d9c900222e4df33d8"
+      },
+      "v3": {
+        "swap_count": 0,
+        "cx_count": 45,
+        "two_qubit_gate_count": 46,
+        "multi_qubit_gate_count": 16,
+        "physical_layout": null,
+        "layout_identity": null,
+        "coupling_map": null,
+        "topology": null,
+        "circuit_fingerprint": "sha256:5a5ad8f01b9be93493b76e210ab402d83e476cd018b14426e971bdb78334672e"
+      },
+      "v4": {
+        "swap_count": 0,
+        "cx_count": 45,
+        "two_qubit_gate_count": 46,
+        "multi_qubit_gate_count": 16,
+        "physical_layout": null,
+        "layout_identity": null,
+        "coupling_map": null,
+        "topology": null,
+        "circuit_fingerprint": "sha256:5a5ad8f01b9be93493b76e210ab402d83e476cd018b14426e971bdb78334672e"
+      },
+      "v5": {
+        "swap_count": 24,
+        "cx_count": 45,
+        "two_qubit_gate_count": 70,
+        "multi_qubit_gate_count": 16,
+        "physical_layout": {
+          "0": 1,
+          "1": 4,
+          "2": 6,
+          "3": 3,
+          "4": 0,
+          "5": 5,
+          "6": 2,
+          "7": 7
+        },
+        "layout_identity": false,
+        "coupling_map": [
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            3
+          ],
+          [
+            3,
+            2
+          ],
+          [
+            3,
+            4
+          ],
+          [
+            4,
+            3
+          ],
+          [
+            4,
+            5
+          ],
+          [
+            5,
+            4
+          ],
+          [
+            5,
+            6
+          ],
+          [
+            6,
+            5
+          ],
+          [
+            6,
+            7
+          ],
+          [
+            7,
+            6
+          ]
+        ],
+        "topology": "linear",
+        "circuit_fingerprint": "sha256:363f4800f75c8492a542d537be91962ba8881f689cebde2ca59a6f391c42be23"
+      },
+      "v6": {
+        "swap_count": 23,
+        "cx_count": 45,
+        "two_qubit_gate_count": 69,
+        "multi_qubit_gate_count": 16,
+        "physical_layout": {
+          "0": 6,
+          "1": 4,
+          "2": 3,
+          "3": 2,
+          "4": 7,
+          "5": 5,
+          "6": 1,
+          "7": 0
+        },
+        "layout_identity": false,
+        "coupling_map": [
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            3
+          ],
+          [
+            3,
+            2
+          ],
+          [
+            3,
+            4
+          ],
+          [
+            4,
+            3
+          ],
+          [
+            4,
+            5
+          ],
+          [
+            5,
+            4
+          ],
+          [
+            5,
+            6
+          ],
+          [
+            6,
+            5
+          ],
+          [
+            6,
+            7
+          ],
+          [
+            7,
+            6
+          ],
+          [
+            0,
+            7
+          ],
+          [
+            7,
+            0
+          ]
+        ],
+        "topology": "ring",
+        "circuit_fingerprint": "sha256:a8a4a25f132eb44d029a3c9fc29dfe184f71ee4bd73969b056a20004e2fc9aca"
+      }
+    }
+  },
+  "findings": {
+    "coarse_metric_tied_groups": [
+      [
+        "v3",
+        "v4"
+      ]
+    ],
+    "coarse_metrics_sufficient_to_distinguish_all_versions": true,
+    "optimization_branches_v2_v3_v4_structurally_differentiated": true,
+    "hardware_branches_v5_v6_differentiated_by_fingerprint": true,
+    "hardware_branches_v5_v6_differentiated_by_physical_layout": true
+  }
+}
