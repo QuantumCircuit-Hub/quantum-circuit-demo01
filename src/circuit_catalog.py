@@ -71,19 +71,22 @@ def _load_mqtbench_evolution(slug: str) -> dict[str, Any]:
 
 
 # key -> (display name, loader). Dict order is the order offered in the UI.
+# Display names are user-facing: no internal development-phase labels
+# (e.g. "Phase 4B") -- those are implementation history, not something a
+# demo viewer needs to know.
 CATALOG: dict[str, tuple[str, Callable[[], dict[str, Any]]]] = {
-    "qft_3": ("QFT-3 (Phase 2, hand-authored sample)", _load_qft_3),
-    "mqt_ghz_5": ("GHZ-5 (Phase 4B, real MQT Bench circuit)", lambda: _load_mqtbench_evolution("ghz_5")),
+    "qft_3": ("QFT-3 (hand-authored sample, 3 qubits)", _load_qft_3),
+    "mqt_ghz_5": ("GHZ-5 (MQT Bench circuit, 5 qubits)", lambda: _load_mqtbench_evolution("ghz_5")),
     "mqt_qftentangled_5": (
-        "QFT-entangled-5 (Phase 4C, real MQT Bench circuit)",
+        "QFT-entangled-5 (MQT Bench circuit, 5 qubits)",
         lambda: _load_mqtbench_evolution("qftentangled_5"),
     ),
     "mqt_multiplier_8": (
-        "Multiplier-8 (real MQT Bench circuit, 8 qubits)",
+        "Multiplier-8 (MQT Bench circuit, 8 qubits)",
         lambda: _load_mqtbench_evolution("multiplier_8"),
     ),
     "mqt_draper_qft_adder_8": (
-        "QFT-Adder-8 (real MQT Bench circuit, 8 qubits)",
+        "QFT-Adder-8 (MQT Bench circuit, 8 qubits)",
         lambda: _load_mqtbench_evolution("draper_qft_adder_8"),
     ),
 }

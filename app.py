@@ -25,12 +25,20 @@ SRC_DIR = PROJECT_ROOT / "src"
 if str(SRC_DIR) not in sys.path:
     sys.path.insert(0, str(SRC_DIR))
 
-from circuit_catalog import CATALOG, MissingDataError, load_circuit_bundle  # noqa: E402
+from circuit_catalog import (  # noqa: E402
+    CATALOG,
+    MissingDataError,
+    diagram_path,
+    load_circuit_bundle,
+)
 from evolution_data import (  # noqa: E402
     COMPARISON_METRICS,
+    FUTURE_COMPARISON_FIELDS,
+    OPTIONAL_COMPARISON_METRICS,
     TRANSFORMATION_DESCRIPTIONS,
-    compare_versions,
+    compare_versions_extended,
     interpret_comparison,
+    stage_label,
 )
 
 ARROW_DOWN = "↓"  # rendered in the browser; source is UTF-8, not console output
@@ -43,6 +51,19 @@ NODE_COLORS = {
     "hardware_mapping": ("#fef3c7", "#b45309"),  # hardware branch: amber
 }
 DEFAULT_NODE_COLOR = ("#f1f5f9", "#475569")
+
+# Display labels for comparison metric cards (Compare Versions section).
+METRIC_LABELS = {
+    "gate_count": "Gates",
+    "depth": "Depth",
+    "num_1q_gates": "1-qubit gates",
+    "num_2q_gates": "2-qubit gates",
+    "swap_count": "SWAPs",
+    "cx_count": "CX gates",
+    "semantic_relation": "Semantic relation",
+    "fidelity": "Fidelity",
+    "trace_distance": "Trace distance",
+}
 
 
 def _xml_escape(text: str) -> str:
@@ -64,16 +85,60 @@ def _edge_short_label(edge_data: dict) -> str:
     return transformation or "?"
 
 
+def _edge_tooltip(edge_data: dict) -> str:
+    """A fuller, human-readable description of an edge's transformation
+    and provenance for its hover tooltip, e.g. 'Qiskit transpile,
+    optimization_level=3'. Only describes what is actually recorded on
+    the edge -- nothing here is inferred or fabricated."""
+    transformation = edge_data.get("transformation", "")
+    parameters = edge_data.get("parameters") or {}
+    tool = edge_data.get("tool")
+    tool_version = edge_data.get("tool_version")
+
+    if transformation == "qiskit_transpile":
+        opt_level = parameters.get("optimization_level")
+        text = f"Qiskit transpile, optimization_level={opt_level}" if opt_level is not None else "Qiskit transpile"
+    elif transformation == "hardware_mapping":
+        topology = edge_data.get("topology") or parameters.get("topology")
+        opt_level = parameters.get("optimization_level")
+        bits = ["Hardware mapping"]
+        if topology:
+            bits.append(f"topology={topology}")
+        if opt_level is not None:
+            bits.append(f"optimization_level={opt_level}")
+        text = ", ".join(bits)
+    elif transformation in ("original", "original_generation"):
+        text = "Original generation"
+    else:
+        text = transformation or "Transformation"
+
+    if tool:
+        tool_str = f"{tool} {tool_version}".strip() if tool_version else tool
+        text += f" (via {tool_str})"
+    return text
+
+
+def _metric_delta_suffix(current_value: int, parent_value: int | None) -> str:
+    """' (-1)' / ' (+2)' vs. a parent's value, or '' if there is no parent
+    (root version) -- never a judgment about whether the change is good."""
+    if parent_value is None:
+        return ""
+    diff = current_value - parent_value
+    return f" ({diff:+d})"
+
+
 def build_evolution_svg(
     graph: nx.DiGraph, generations: list, records: dict, root_version: str, circuit_key: str
 ) -> str:
     """Render the evolution graph as a self-contained SVG: one box per
     version (generation = column, siblings stacked within a column) with
     curved, labeled, arrowed edges between parent and child boxes. Each
-    node is a clickable link that opens pages/circuit_detail.py (QASM +
-    circuit diagram) for that version in a new browser tab."""
-    box_w, box_h = 168, 72
-    col_gap, row_gap = 96, 24
+    node shows its stage (Original/Optimized/Hardware Mapped) and its
+    gate-count/depth change relative to its parent, and is a clickable
+    link that opens pages/circuit_detail.py (QASM + circuit diagram) for
+    that version in a new browser tab."""
+    box_w, box_h = 200, 92
+    col_gap, row_gap = 110, 28
     margin_x, margin_y = 24, 24
 
     max_rows = max(len(gen) for gen in generations)
@@ -90,8 +155,9 @@ def build_evolution_svg(
 
     svg = [
         f'<svg viewBox="0 0 {total_width:.0f} {total_height:.0f}" '
+        f'width="{total_width:.0f}" height="{total_height:.0f}" '
         f'xmlns="http://www.w3.org/2000/svg" font-family="sans-serif" '
-        f'style="width:100%; height:auto; background:#ffffff; border-radius:8px;">',
+        f'style="display:block; background:#ffffff; border-radius:8px;">',
         '<defs><marker id="qceg-arrow" viewBox="0 0 10 10" refX="9" refY="5" '
         'markerWidth="7" markerHeight="7" orient="auto-start-reverse">'
         '<path d="M0,0 L10,5 L0,10 z" fill="#94a3b8" /></marker></defs>',
@@ -107,6 +173,8 @@ def build_evolution_svg(
         start_x, start_y = x1 + box_w, y1 + box_h / 2
         end_x, end_y = x2, y2 + box_h / 2
         mid_x = (start_x + end_x) / 2
+        tooltip = _xml_escape(_edge_tooltip(edge_data))
+        svg.append(f"<g><title>{tooltip}</title>")
         svg.append(
             f'<path d="M{start_x:.1f},{start_y:.1f} C{mid_x:.1f},{start_y:.1f} '
             f'{mid_x:.1f},{end_y:.1f} {end_x:.1f},{end_y:.1f}" fill="none" '
@@ -123,6 +191,7 @@ def build_evolution_svg(
             f'<text x="{label_x:.1f}" y="{label_y:.1f}" font-size="11" '
             f'text-anchor="middle" fill="#475569">{label}</text>'
         )
+        svg.append("</g>")
 
     # Nodes. Each is wrapped in a link to the circuit-detail page (QASM +
     # circuit diagram for that version), opened in a new tab so the main
@@ -130,9 +199,18 @@ def build_evolution_svg(
     # is never disturbed by the click.
     for circuit_id, (x, y) in positions.items():
         version = graph.nodes[circuit_id]["version"]
-        metrics = records[version]["metrics"]
-        transformation = None if version == root_version else records[version]["provenance"].get("transformation")
+        record = records[version]
+        metrics = record["metrics"]
+        transformation = None if version == root_version else record["provenance"].get("transformation")
         fill, stroke = NODE_COLORS.get(transformation, DEFAULT_NODE_COLOR)
+        stage = stage_label(transformation)
+
+        parent_id = record["provenance"].get("parent_version")
+        parent_metrics = None
+        if parent_id and parent_id in graph.nodes:
+            parent_metrics = records[graph.nodes[parent_id]["version"]]["metrics"]
+        gate_delta = _metric_delta_suffix(metrics["gate_count"], parent_metrics["gate_count"] if parent_metrics else None)
+        depth_delta = _metric_delta_suffix(metrics["depth"], parent_metrics["depth"] if parent_metrics else None)
 
         detail_url = "circuit_detail?" + urlencode({"circuit": circuit_key, "version": version})
         svg.append(f'<a href="{_xml_escape(detail_url)}" target="_blank" class="qceg-node">')
@@ -142,13 +220,17 @@ def build_evolution_svg(
             f'fill="{fill}" stroke="{stroke}" stroke-width="1.5" />'
         )
         svg.append(
-            f'<text x="{x + box_w / 2:.1f}" y="{y + 28:.1f}" font-size="16" '
-            f'font-weight="700" text-anchor="middle" fill="#0f172a">{_xml_escape(version)}</text>'
+            f'<text x="{x + box_w / 2:.1f}" y="{y + 24:.1f}" font-size="15" '
+            f'font-weight="700" text-anchor="middle" fill="#0f172a">'
+            f"{_xml_escape(version)} — {_xml_escape(stage)}</text>"
         )
         svg.append(
-            f'<text x="{x + box_w / 2:.1f}" y="{y + 50:.1f}" font-size="12" '
-            f'text-anchor="middle" fill="#334155">gates: {metrics["gate_count"]}  '
-            f'depth: {metrics["depth"]}</text>'
+            f'<text x="{x + box_w / 2:.1f}" y="{y + 47:.1f}" font-size="12" '
+            f'text-anchor="middle" fill="#334155">Gates: {metrics["gate_count"]}{_xml_escape(gate_delta)}</text>'
+        )
+        svg.append(
+            f'<text x="{x + box_w / 2:.1f}" y="{y + 67:.1f}" font-size="12" '
+            f'text-anchor="middle" fill="#334155">Depth: {metrics["depth"]}{_xml_escape(depth_delta)}</text>'
         )
         svg.append("</a>")
 
@@ -158,12 +240,36 @@ def build_evolution_svg(
 
 st.set_page_config(page_title="Quantum Circuit Hub", page_icon=":link:", layout="wide")
 
+# ---------------------------------------------------------------------
+# Landing: positioning first, in under 30 seconds of reading.
+# ---------------------------------------------------------------------
 st.title("Quantum Circuit Hub")
-st.subheader("Quantum Circuit Evolution Demo")
+st.markdown("#### A database for the evolution of quantum circuits.")
 st.write(
-    "QCH manages quantum circuits as evolving data objects. "
-    "Each node is a circuit version and each edge records a transformation."
+    "Store, search, compare, and trace quantum circuits across optimization "
+    "and hardware-mapping transformations."
 )
+st.info(
+    "**Compilers transform circuits. QCH manages what happens before, "
+    "during, and after those transformations.**"
+)
+st.caption(
+    "How to use this demo: select a circuit → explore its evolution graph → "
+    "inspect a version → compare two versions to see what changed."
+)
+with st.expander("Why QCH? (research motivation)"):
+    st.write(
+        "Existing quantum circuit tools primarily generate, compile, or optimize "
+        "circuits. QCH focuses on managing the resulting circuit versions, "
+        "provenance, transformations, metrics, and evolution history as "
+        "queryable data."
+    )
+    st.write(
+        "**Long-term vision:** build a searchable knowledge base of quantum "
+        "circuit evolution."
+    )
+
+st.divider()
 
 # ---------------------------------------------------------------------
 # Circuit picker.
@@ -198,7 +304,10 @@ st.divider()
 st.header("Circuit Evolution Graph")
 
 svg = build_evolution_svg(graph, generations, records, root_version, circuit_key)
-st.markdown(svg, unsafe_allow_html=True)
+# Horizontally scrollable at natural size, rather than shrinking to fit:
+# keeps node text legible on laptops/desktops (the priority) and on
+# narrow/mobile screens for wider graphs (more generations or siblings).
+st.markdown(f'<div style="overflow-x:auto;">{svg}</div>', unsafe_allow_html=True)
 
 st.caption(
     "⬜ grey = root · 🟦 blue = optimization (qiskit_transpile) · 🟧 amber = hardware mapping "
@@ -212,7 +321,10 @@ st.caption(
 st.divider()
 
 # ---------------------------------------------------------------------
-# Part D — Inspect Circuit Version.
+# Part D — Inspect Circuit Version, organized as three layers:
+# Identity (what/where this version is), Metrics (the key numbers, as
+# metric cards), Representation (histogram, diagram, QASM, low-level
+# metadata -- present but not dominating the page).
 # ---------------------------------------------------------------------
 st.header("Inspect Circuit Version")
 
@@ -221,60 +333,68 @@ record = records[selected_version]
 metrics = record["metrics"]
 provenance = record["provenance"]
 source = record["source"]
+stage = stage_label(None if selected_version == root_version else provenance.get("transformation"))
 
 if selected_version == root_version:
     st.info(f"{root_version} is the original/root version: it has no parent and was not produced by any transformation.")
 
-col_identity, col_provenance = st.columns(2)
-
-with col_identity:
-    st.subheader("Identity & metrics")
-    st.write(f"**circuit_id:** {record['circuit_id']}")
-    st.write(f"**logical_name:** {record['logical_name']}")
-    st.write(f"**version:** {record['version']}")
-    st.write(f"**Number of qubits:** {metrics['num_qubits']}")
-    st.write(f"**Gate count:** {metrics['gate_count']}")
-    st.write(f"**Depth:** {metrics['depth']}")
-    st.write(f"**1-qubit gates:** {metrics['num_1q_gates']}")
-    st.write(f"**2-qubit gates:** {metrics['num_2q_gates']}")
-    st.write("**Gate histogram:**")
-    st.json(metrics["gate_histogram"])
-
-with col_provenance:
-    st.subheader("Provenance")
+st.subheader("Identity")
+col_id_a, col_id_b = st.columns(2)
+with col_id_a:
+    st.write(f"**Version:** {selected_version} — {stage}")
+    st.write(f"**Logical circuit:** {record['logical_name']}")
+    st.caption(f"circuit_id: `{record['circuit_id']}`")
+with col_id_b:
     parent_version_id = provenance.get("parent_version")
     st.write(f"**Parent version:** {parent_version_id if parent_version_id else 'None (root version)'}")
     st.write(f"**Transformation:** {provenance.get('transformation', 'n/a')}")
     tool = provenance.get("tool")
     if tool:
-        st.write(f"**Tool:** {tool} {provenance.get('tool_version', '')}".strip())
-    st.write("**Transformation parameters:**")
-    st.json(provenance.get("parameters") or {})
-    st.write("**Source:**")
-    st.json(source)
+        st.caption(f"Tool: {tool} {provenance.get('tool_version', '')}".strip())
 
-# Phase 4C's experimental evolution_metrics (swap/cx counts, physical
-# layout, structural fingerprint) -- only present for the MQT Bench
-# hardware-mapping experiments, not for every circuit/version.
+st.subheader("Metrics")
 evolution_metrics = record.get("evolution_metrics")
-if evolution_metrics:
-    st.markdown("**Experimental evolution metrics (Phase 4C)**")
-    col_hw, col_layout = st.columns(2)
-    with col_hw:
-        st.write(f"SWAP count: {evolution_metrics['swap_count']}")
-        st.write(f"CX count: {evolution_metrics['cx_count']}")
-        st.write(f"2-qubit gate count: {evolution_metrics['two_qubit_gate_count']}")
-        st.write(f"Multi-qubit (3+) gate count: {evolution_metrics['multi_qubit_gate_count']}")
-        st.write(f"Topology: {evolution_metrics['topology'] or 'n/a (no hardware constraint)'}")
-    with col_layout:
-        layout_identity = evolution_metrics["layout_identity"]
-        st.write(f"Layout identity: {layout_identity if layout_identity is not None else 'n/a (no layout)'}")
-        st.write("Physical layout (logical → physical):")
-        st.json(evolution_metrics["physical_layout"] or {})
-    fingerprint = evolution_metrics["circuit_fingerprint"]
-    st.caption(f"Structural fingerprint: `{fingerprint[:19]}…` (full value in an expander below)")
-    with st.expander("Full structural fingerprint"):
-        st.code(fingerprint)
+metric_cols = st.columns(5)
+metric_cols[0].metric("Qubits", metrics["num_qubits"])
+metric_cols[1].metric("Gates", metrics["gate_count"])
+metric_cols[2].metric("Depth", metrics["depth"])
+metric_cols[3].metric("2-qubit gates", metrics["num_2q_gates"])
+metric_cols[4].metric("SWAPs", evolution_metrics["swap_count"] if evolution_metrics else "n/a")
+
+st.subheader("Representation")
+col_rep_data, col_rep_diagram = st.columns([1, 1])
+
+with col_rep_data:
+    st.write("**Gate histogram**")
+    st.json(metrics["gate_histogram"])
+    with st.expander("Transformation parameters & source"):
+        st.write("**Transformation parameters:**")
+        st.json(provenance.get("parameters") or {})
+        st.write("**Source:**")
+        st.json(source)
+    # Phase 4C's experimental evolution_metrics (swap/cx counts, physical
+    # layout, structural fingerprint) -- only present for the MQT Bench
+    # hardware-mapping experiments, not for every circuit/version.
+    if evolution_metrics:
+        with st.expander("Experimental evolution metrics (Phase 4C)"):
+            st.write(f"CX count: {evolution_metrics['cx_count']}")
+            st.write(f"Multi-qubit (3+) gate count: {evolution_metrics['multi_qubit_gate_count']}")
+            st.write(f"Topology: {evolution_metrics['topology'] or 'n/a (no hardware constraint)'}")
+            layout_identity = evolution_metrics["layout_identity"]
+            st.write(f"Layout identity: {layout_identity if layout_identity is not None else 'n/a (no layout)'}")
+            st.write("Physical layout (logical → physical):")
+            st.json(evolution_metrics["physical_layout"] or {})
+            st.caption(f"Structural fingerprint: `{evolution_metrics['circuit_fingerprint']}`")
+
+with col_rep_diagram:
+    st.write("**Circuit diagram**")
+    diagram_file = diagram_path(circuit_key, selected_version)
+    if diagram_file.exists():
+        st.image(str(diagram_file), use_container_width=True)
+    else:
+        st.caption("No pre-rendered diagram available for this version.")
+    detail_url = "circuit_detail?" + urlencode({"circuit": circuit_key, "version": selected_version})
+    st.link_button("Open full QASM source & diagram ↗", detail_url)
 
 st.divider()
 
@@ -282,6 +402,7 @@ st.divider()
 # Part E — Compare Versions.
 # ---------------------------------------------------------------------
 st.header("Compare Versions")
+st.caption("QCH compares recorded versions of the same logical circuit, not just two standalone files.")
 
 col_a, col_b = st.columns(2)
 with col_a:
@@ -291,23 +412,33 @@ with col_b:
     version_b = st.selectbox("Version B", VERSIONS, index=default_b_index, key="compare_b")
 
 record_a, record_b = records[version_a], records[version_b]
-comparison = compare_versions(record_a, record_b)
-
-rows = [
-    {
-        "metric": metric,
-        f"version A ({version_a})": comparison[metric]["a"],
-        f"version B ({version_b})": comparison[metric]["b"],
-        "difference (B - A)": comparison[metric]["difference"],
-    }
-    for metric in COMPARISON_METRICS
-]
-st.table(rows)
+comparison = compare_versions_extended(record_a, record_b)
 
 if version_a == version_b:
     st.info("Version A and Version B are the same version.")
 else:
     st.success(interpret_comparison(record_a, record_b, comparison))
+
+metric_cards = [(key, METRIC_LABELS[key]) for key in COMPARISON_METRICS]
+metric_cards += [(key, METRIC_LABELS[key]) for key in OPTIONAL_COMPARISON_METRICS]
+
+metric_cols = st.columns(len(metric_cards))
+for col, (key, label) in zip(metric_cols, metric_cards):
+    entry = comparison[key]
+    if entry is None:
+        col.metric(label, "n/a")
+    else:
+        col.metric(label, entry["b"], delta=f"{entry['difference']:+d} vs {version_a}", delta_color="off")
+st.caption("SWAPs/CX deltas show 'n/a' when hardware-mapping data isn't recorded for both versions.")
+
+with st.expander("Future comparison dimensions (not yet computed)"):
+    st.caption(
+        "QCH's data model (see docs/QCEG_DATA_MODEL_V0.1.md) distinguishes metric "
+        "equality, structural equality, and semantic equivalence as different "
+        "notions. These fields are reserved extension points, not real values."
+    )
+    for key in FUTURE_COMPARISON_FIELDS:
+        st.write(f"**{METRIC_LABELS.get(key, key.replace('_', ' ').title())}:** {comparison[key]}")
 
 st.divider()
 
@@ -338,16 +469,3 @@ for node_id in topo_order:
             st.caption(f"{key} = {value}")
 
     st.write("")
-
-st.divider()
-
-# ---------------------------------------------------------------------
-# Part G — Research message.
-# ---------------------------------------------------------------------
-st.header("Why QCH?")
-st.write(
-    "Existing quantum circuit tools primarily generate, compile, or optimize circuits. "
-    "QCH focuses on managing the resulting circuit versions, provenance, transformations, "
-    "metrics, and evolution history as queryable data."
-)
-st.write("**Long-term vision:** build a searchable knowledge base of quantum circuit evolution.")
