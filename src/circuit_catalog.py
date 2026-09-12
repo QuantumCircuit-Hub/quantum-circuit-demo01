@@ -28,6 +28,7 @@ from typing import Any, Callable
 import networkx as nx
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
+RAW_DIR = PROJECT_ROOT / "data" / "raw"
 PROCESSED_DIR = PROJECT_ROOT / "data" / "processed"
 MQTBENCH_DIR = PROJECT_ROOT / "data" / "mqtbench"
 
@@ -166,3 +167,34 @@ def load_circuit_bundle(key: str) -> dict[str, Any]:
         "graph": graph,
         "generations": generations,
     }
+
+
+def _slug_for_key(key: str) -> str:
+    """catalog key -> on-disk filename slug, e.g. "mqt_ghz_5" -> "ghz_5"."""
+    return key[len("mqt_"):] if key.startswith("mqt_") else key
+
+
+def qasm_path(key: str, version: str) -> Path:
+    """Path to the OpenQASM 2 file for one circuit version. Root (v1)
+    circuits live under data/raw or data/mqtbench/raw; derived versions
+    live under data/processed or data/mqtbench/evolution/<slug>/ --
+    matching exactly what the generation scripts (Phase 1-4C) wrote.
+    """
+    if key == "qft_3":
+        if version == "v1":
+            return RAW_DIR / "sample_qft_3.qasm"
+        return PROCESSED_DIR / f"qft_3_{version}.qasm"
+
+    slug = _slug_for_key(key)
+    if version == "v1":
+        return MQTBENCH_DIR / "raw" / f"{slug}.qasm"
+    return MQTBENCH_DIR / "evolution" / slug / f"{slug}_{version}.qasm"
+
+
+def diagram_path(key: str, version: str) -> Path:
+    """Path to the pre-rendered circuit-diagram PNG for one circuit
+    version (see scripts/render_circuit_diagrams.py) -- always sits next
+    to that version's QASM file, same basename, .png extension. May not
+    exist yet if the render script hasn't been run for a new circuit.
+    """
+    return qasm_path(key, version).with_suffix(".png")

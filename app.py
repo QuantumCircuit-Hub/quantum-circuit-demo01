@@ -1,10 +1,12 @@
 """Minimal Streamlit demo of the Quantum Circuit Evolution Graph (QCEG).
 
 Research demonstration only (not production UI). Lets the user pick
-which logical circuit's evolution graph to explore -- qft_3 (Phase 2),
-GHZ-5 (Phase 4B), or QFT-entangled-5 (Phase 4C) -- and visualizes its
-version tree, using data read live from the corresponding JSON files.
-No metrics are hard-coded here.
+which logical circuit's evolution graph to explore (see
+src/circuit_catalog.py for the full list) and visualizes its version
+tree, using data read live from the corresponding JSON files. Clicking
+a version box opens pages/circuit_detail.py in a new tab, showing that
+version's QASM source and a pre-rendered circuit diagram. No metrics
+are hard-coded here.
 
 Run with:  streamlit run app.py   (from the project root)
 """
@@ -13,6 +15,7 @@ from __future__ import annotations
 
 import sys
 from pathlib import Path
+from urllib.parse import urlencode
 
 import networkx as nx
 import streamlit as st
@@ -61,10 +64,14 @@ def _edge_short_label(edge_data: dict) -> str:
     return transformation or "?"
 
 
-def build_evolution_svg(graph: nx.DiGraph, generations: list, records: dict, root_version: str) -> str:
+def build_evolution_svg(
+    graph: nx.DiGraph, generations: list, records: dict, root_version: str, circuit_key: str
+) -> str:
     """Render the evolution graph as a self-contained SVG: one box per
     version (generation = column, siblings stacked within a column) with
-    curved, labeled, arrowed edges between parent and child boxes."""
+    curved, labeled, arrowed edges between parent and child boxes. Each
+    node is a clickable link that opens pages/circuit_detail.py (QASM +
+    circuit diagram) for that version in a new browser tab."""
     box_w, box_h = 168, 72
     col_gap, row_gap = 96, 24
     margin_x, margin_y = 24, 24
@@ -88,6 +95,9 @@ def build_evolution_svg(graph: nx.DiGraph, generations: list, records: dict, roo
         '<defs><marker id="qceg-arrow" viewBox="0 0 10 10" refX="9" refY="5" '
         'markerWidth="7" markerHeight="7" orient="auto-start-reverse">'
         '<path d="M0,0 L10,5 L0,10 z" fill="#94a3b8" /></marker></defs>',
+        "<style>.qceg-node { cursor: pointer; } "
+        ".qceg-node rect { transition: opacity 0.15s; } "
+        ".qceg-node:hover rect { opacity: 0.8; }</style>",
     ]
 
     # Edges first, so node boxes draw on top of the lines' endpoints.
@@ -114,12 +124,19 @@ def build_evolution_svg(graph: nx.DiGraph, generations: list, records: dict, roo
             f'text-anchor="middle" fill="#475569">{label}</text>'
         )
 
-    # Nodes.
+    # Nodes. Each is wrapped in a link to the circuit-detail page (QASM +
+    # circuit diagram for that version), opened in a new tab so the main
+    # page's own state (selected circuit, compare-version choices, etc.)
+    # is never disturbed by the click.
     for circuit_id, (x, y) in positions.items():
         version = graph.nodes[circuit_id]["version"]
         metrics = records[version]["metrics"]
         transformation = None if version == root_version else records[version]["provenance"].get("transformation")
         fill, stroke = NODE_COLORS.get(transformation, DEFAULT_NODE_COLOR)
+
+        detail_url = "circuit_detail?" + urlencode({"circuit": circuit_key, "version": version})
+        svg.append(f'<a href="{_xml_escape(detail_url)}" target="_blank" class="qceg-node">')
+        svg.append(f"<title>Open {_xml_escape(version)} circuit detail (QASM + diagram)</title>")
         svg.append(
             f'<rect x="{x:.1f}" y="{y:.1f}" width="{box_w}" height="{box_h}" rx="10" '
             f'fill="{fill}" stroke="{stroke}" stroke-width="1.5" />'
@@ -133,6 +150,7 @@ def build_evolution_svg(graph: nx.DiGraph, generations: list, records: dict, roo
             f'text-anchor="middle" fill="#334155">gates: {metrics["gate_count"]}  '
             f'depth: {metrics["depth"]}</text>'
         )
+        svg.append("</a>")
 
     svg.append("</svg>")
     return "".join(svg)
@@ -179,11 +197,12 @@ st.divider()
 # ---------------------------------------------------------------------
 st.header("Circuit Evolution Graph")
 
-svg = build_evolution_svg(graph, generations, records, root_version)
+svg = build_evolution_svg(graph, generations, records, root_version, circuit_key)
 st.markdown(svg, unsafe_allow_html=True)
 
 st.caption(
-    "⬜ grey = root · 🟦 blue = optimization (qiskit_transpile) · 🟧 amber = hardware mapping"
+    "⬜ grey = root · 🟦 blue = optimization (qiskit_transpile) · 🟧 amber = hardware mapping "
+    "· click a version box to open its QASM source and circuit diagram in a new tab"
 )
 st.caption(
     f"One logical circuit ({bundle['display_name']}) evolving through "
