@@ -27,6 +27,7 @@ from circuit_catalog import (  # noqa: E402
     load_circuit_bundle,
     qasm_path,
 )
+from evolution_data import stage_label  # noqa: E402
 
 st.set_page_config(page_title="Circuit Detail", page_icon=":mag:", layout="wide")
 
@@ -58,9 +59,11 @@ record = bundle["records"][version]
 metrics = record["metrics"]
 provenance = record["provenance"]
 
+stage = stage_label(None if version == bundle["root_version"] else provenance.get("transformation"))
+
 st.page_link("app.py", label="← Back to Quantum Circuit Hub")
 st.title(f"{bundle['display_name']}")
-st.subheader(f"Version {version}")
+st.subheader(f"Version {version} — {stage}")
 st.caption(record["circuit_id"])
 
 if version == bundle["root_version"]:

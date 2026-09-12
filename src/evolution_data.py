@@ -31,6 +31,26 @@ TRANSFORMATION_DESCRIPTIONS = {
     "hardware_mapping": "Hardware-constrained circuit",
 }
 
+# Short "stage" badges used on the evolution-graph nodes and the Inspect
+# Circuit Version page -- a compact vocabulary layered on top of the raw
+# transformation string, purely presentational (not stored data).
+STAGE_LABELS = {
+    "original": "Original",
+    "original_generation": "Original",
+    "qiskit_transpile": "Optimized",
+    "hardware_mapping": "Hardware Mapped",
+}
+
+
+def stage_label(transformation: str | None) -> str:
+    """Short stage badge for a transformation string, e.g. "Optimized".
+    Falls back to a title-cased version of the raw string for any
+    transformation type not in STAGE_LABELS (e.g. future types), and to
+    "Original" when there is none (root version)."""
+    if not transformation:
+        return "Original"
+    return STAGE_LABELS.get(transformation, transformation.replace("_", " ").title())
+
 
 class MissingDataError(FileNotFoundError):
     """Raised when an expected QCH data file is missing."""
@@ -93,6 +113,51 @@ def compare_versions(
         a_value = record_a["metrics"][key]
         b_value = record_b["metrics"][key]
         comparison[key] = {"a": a_value, "b": b_value, "difference": b_value - a_value}
+    return comparison
+
+
+# Fields sourced from a version's optional "evolution_metrics" block
+# (Phase 4C) rather than the always-present "metrics" block -- only
+# meaningful when BOTH compared records have it (e.g. not every circuit
+# has been through hardware mapping).
+OPTIONAL_COMPARISON_METRICS = ["swap_count", "cx_count"]
+
+# Comparison dimensions QCH does not compute yet (see
+# docs/QCEG_DATA_MODEL_V0.1.md Part G/K: metric equality, structural
+# equality, and semantic equivalence are distinct notions, and the last
+# one is explicitly future work). Declared here, not fabricated, so the
+# UI has a stable place to render them once a real computation exists.
+FUTURE_COMPARISON_FIELDS = ["semantic_relation", "fidelity", "trace_distance"]
+NOT_COMPUTED = "Not computed"
+
+
+def compare_versions_extended(
+    record_a: dict[str, Any], record_b: dict[str, Any]
+) -> dict[str, Any]:
+    """compare_versions() plus:
+
+    - optional evolution_metrics fields (OPTIONAL_COMPARISON_METRICS),
+      included only when both records have an "evolution_metrics" block
+      containing that field; otherwise the key maps to None so callers
+      can render "not available" without guessing why.
+    - future comparison dimensions (FUTURE_COMPARISON_FIELDS), always
+      present and always NOT_COMPUTED -- an explicit extension point,
+      not a real computation.
+    """
+    comparison = compare_versions(record_a, record_b)
+
+    evolution_metrics_a = record_a.get("evolution_metrics")
+    evolution_metrics_b = record_b.get("evolution_metrics")
+    for key in OPTIONAL_COMPARISON_METRICS:
+        if evolution_metrics_a and evolution_metrics_b and key in evolution_metrics_a and key in evolution_metrics_b:
+            a_value, b_value = evolution_metrics_a[key], evolution_metrics_b[key]
+            comparison[key] = {"a": a_value, "b": b_value, "difference": b_value - a_value}
+        else:
+            comparison[key] = None
+
+    for key in FUTURE_COMPARISON_FIELDS:
+        comparison[key] = NOT_COMPUTED
+
     return comparison
 
 
