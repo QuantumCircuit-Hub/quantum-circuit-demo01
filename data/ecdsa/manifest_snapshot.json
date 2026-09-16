@@ -1,0 +1,169 @@
+{
+  "schema_version": "0.1",
+  "dataset": {
+    "dataset_id": "qch:dataset:ecdsafail:v1-v5",
+    "name": "ECDSA.Fail Circuit Evolution V1-V5",
+    "description": "Five historical implementations of the secp256k1 affine point-addition quantum circuit selected from the ECDSA.Fail challenge.",
+    "repository": "Layr-Labs/ecdsafail-challenge",
+    "version_count": 5,
+    "edge_count": 4
+  },
+  "logical_circuit": {
+    "logical_circuit_id": "qch:logical:secp256k1_point_add",
+    "name": "secp256k1_point_add",
+    "operation": "(target_x, target_y) -> (target_x, target_y) + (offset_x, offset_y)",
+    "target_register_bits": 256,
+    "offset_type": "classical"
+  },
+  "benchmark": {
+    "benchmark_id": "ecdsafail:point_add",
+    "primary_metric": "toffoli_x_qubits",
+    "score_definition": "average_executed_toffoli_count * peak_qubits",
+    "official_shots": 9024,
+    "local_official_benchmark_reproduced": false
+  },
+  "versions": [
+    {
+      "version_id": "ecdsafail:6f7c159",
+      "label": "V1",
+      "source_commit": "6f7c159",
+      "artifact": "../ecdsafail-challenge/v1_6f7c159.kmx",
+      "metadata": "../ecdsafail-challenge/v1_6f7c159.json",
+      "metrics": {
+        "operations": 28695222,
+        "qubits": 2715,
+        "classical_bits": 2339473,
+        "registers": 4
+      },
+      "benchmark_run": {
+        "toffoli": 3960753,
+        "qubits": 2715,
+        "score": 10753444395
+      },
+      "verification": {
+        "serialization_round_trip": "passed",
+        "benchmark_correctness": "not_reproduced_locally"
+      },
+      "artifact_sha256": "0be6c90581bb4f524a8c3c40f4a378f73564fa7a0ad60039c363a09c79bb26b6"
+    },
+    {
+      "version_id": "ecdsafail:d19dbb5",
+      "label": "V2",
+      "source_commit": "d19dbb5",
+      "artifact": "../ecdsafail-v2/v2_d19dbb5.kmx",
+      "metadata": "../ecdsafail-v2/v2_d19dbb5.json",
+      "metrics": {
+        "operations": 26283326,
+        "qubits": 2310,
+        "classical_bits": 2320177,
+        "registers": 4
+      },
+      "benchmark_run": {
+        "toffoli": 3656039,
+        "qubits": 2310,
+        "score": 8445450090
+      },
+      "verification": {
+        "serialization_round_trip": "passed",
+        "benchmark_correctness": "not_reproduced_locally"
+      },
+      "artifact_sha256": "addbff8072d46539d41fd0b147805bc9b45e8b7186693768328751c523507b16"
+    },
+    {
+      "version_id": "ecdsafail:cddd5df",
+      "label": "V3",
+      "source_commit": "cddd5df",
+      "artifact": "../ecdsafail-v3/v3_cddd5df.kmx",
+      "metadata": "../ecdsafail-v3/v3_cddd5df.json",
+      "metrics": {
+        "operations": 13354246,
+        "qubits": 1698,
+        "classical_bits": 1099611,
+        "registers": 4
+      },
+      "benchmark_run": {
+        "toffoli": 2447846,
+        "qubits": 1698,
+        "score": 4156442508
+      },
+      "verification": {
+        "serialization_round_trip": "passed",
+        "benchmark_correctness": "not_reproduced_locally"
+      },
+      "artifact_sha256": "866b704d6069339e66164e8223b724b3e28f22d82a1520234ec200e06cb38830"
+    },
+    {
+      "version_id": "ecdsafail:422f21d",
+      "label": "V4",
+      "source_commit": "422f21d",
+      "artifact": "../ecdsafail-v4/v4_422f21d.kmx",
+      "metadata": "../ecdsafail-v4/v4_422f21d.json",
+      "metrics": {
+        "operations": 9784075,
+        "qubits": 1152,
+        "classical_bits": 571051,
+        "registers": 4
+      },
+      "benchmark_run": {
+        "toffoli": 1320763,
+        "qubits": 1152,
+        "score": 1521518976
+      },
+      "verification": {
+        "serialization_round_trip": "passed",
+        "benchmark_correctness": "not_reproduced_locally"
+      },
+      "artifact_sha256": "1190d7d9bdd71382c028c81b60eeadd896a05f75704c1227b58f4cd12278d71e"
+    },
+    {
+      "version_id": "ecdsafail:a39e07e",
+      "label": "V5",
+      "source_commit": "a39e07e",
+      "artifact": "../ecdsafail-v5/v5_a39e07e.kmx",
+      "metadata": "../ecdsafail-v5/v5_a39e07e.json",
+      "metrics": {
+        "operations": 12267379,
+        "qubits": 1259,
+        "classical_bits": 1575,
+        "registers": 4
+      },
+      "benchmark_run": {
+        "toffoli": 903434,
+        "qubits": 1259,
+        "score": 1137423406
+      },
+      "verification": {
+        "serialization_round_trip": "passed",
+        "benchmark_correctness": "not_reproduced_locally"
+      },
+      "artifact_sha256": "896f6b419f9005ea26b6c78a410506faf3dcb054b93f009c38d437969f7f1a2f"
+    }
+  ],
+  "transformation_edges": [
+    {
+      "edge_id": "ecdsafail:V1->V2",
+      "from": "ecdsafail:6f7c159",
+      "to": "ecdsafail:d19dbb5",
+      "relation": "historical_successor"
+    },
+    {
+      "edge_id": "ecdsafail:V2->V3",
+      "from": "ecdsafail:d19dbb5",
+      "to": "ecdsafail:cddd5df",
+      "relation": "historical_successor"
+    },
+    {
+      "edge_id": "ecdsafail:V3->V4",
+      "from": "ecdsafail:cddd5df",
+      "to": "ecdsafail:422f21d",
+      "relation": "historical_successor"
+    },
+    {
+      "edge_id": "ecdsafail:V4->V5",
+      "from": "ecdsafail:422f21d",
+      "to": "ecdsafail:a39e07e",
+      "relation": "historical_successor"
+    }
+  ],
+  "_demo_snapshot_notice": "Derived, lightweight copy of manifest.json from C:\\Users\\jilu\\Project\\QCDB\\Data\\ECDSA\\qch-ecdsafail-dataset\\manifest.json, generated by scripts/snapshot_ecdsa_manifest.py on 2026-09-16 for portable/offline demo use (e.g. Streamlit Community Cloud, which has no access to the external dataset root). The frozen dataset at the path above remains the authoritative source; this snapshot is used only as a fallback."
+}

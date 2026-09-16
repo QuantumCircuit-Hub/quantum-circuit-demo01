@@ -18,6 +18,7 @@ from pathlib import Path
 from urllib.parse import urlencode
 
 import networkx as nx
+import pandas as pd
 import streamlit as st
 
 PROJECT_ROOT = Path(__file__).resolve().parent
@@ -31,6 +32,22 @@ from circuit_catalog import (  # noqa: E402
     diagram_path,
     load_circuit_bundle,
 )
+from ecdsa_adapter import (  # noqa: E402
+    COMPARISON_METRICS as ECDSA_COMPARISON_METRICS,
+    ECDSADatasetUnavailable,
+    compare_versions as compare_ecdsa_versions,
+    load_bundle as load_ecdsa_bundle,
+)
+from ecdsa_ui import (  # noqa: E402
+    SUMMARY_METRICS as ECDSA_SUMMARY_METRICS,
+    build_tradeoff_summary,
+    chart_index_label,
+    format_compact_number,
+    format_month_year,
+    format_short_date,
+    format_signed_pct_with_arrow,
+    is_multi_objective_tradeoff,
+)
 from evolution_data import (  # noqa: E402
     COMPARISON_METRICS,
     FUTURE_COMPARISON_FIELDS,
@@ -40,6 +57,21 @@ from evolution_data import (  # noqa: E402
     interpret_comparison,
     stage_label,
 )
+
+# Sentinel catalog key for the real-world ECDSA.Fail dataset. Kept out of
+# circuit_catalog.CATALOG on purpose: that catalog's loader/graph/compare
+# machinery is built around QASM circuits with gate-level metrics
+# (gate_count, depth, gate_histogram, ...), which don't apply to this
+# dataset (no QASM, no per-gate representation -- see src/ecdsa_adapter.py
+# and docs/ECDSA_INTEGRATION.md). It is offered in the same circuit/dataset
+# picker below so the user selects among all of them in one place.
+ECDSA_KEY = "ecdsafail_secp256k1_point_add"
+ECDSA_DISPLAY_NAME = "ECDSA.Fail — secp256k1 Point Addition (real-world dataset, V1-V5)"
+
+# session_state key shared by the ECDSA evolution graph's node buttons and
+# the Version Inspector's selectbox, so clicking a graph node and picking
+# from the dropdown both drive (and reflect) the same selected version.
+ECDSA_SELECTED_VERSION_KEY = "ecdsa_selected_version"
 
 ARROW_DOWN = "↓"  # rendered in the browser; source is UTF-8, not console output
 
@@ -238,6 +270,308 @@ def build_evolution_svg(
     return "".join(svg)
 
 
+def render_ecdsa_evolution_graph(versions: list[dict]) -> None:
+    """Render the ECDSA.Fail V1-V5 chain as a row of native Streamlit
+    "node" cards connected by arrow glyphs, instead of a fixed-width SVG.
+
+    Why not SVG: an embedded <svg> (via st.markdown/unsafe_allow_html)
+    is inert HTML -- Streamlit has no built-in way to wire a click on an
+    SVG shape back to Python state without a custom bidirectional
+    component (a heavy dependency for one graph) or a full-page
+    query-param navigation (fragile: it would reset the rest of the
+    page's widget state, including which circuit/dataset is selected).
+    A fixed pixel-width SVG also does not reflow on a narrow viewport,
+    which clipped V5 in the previous implementation.
+
+    st.columns()/st.container()/st.button() solve both problems at once:
+    columns reflow (stacking vertically below Streamlit's narrow-viewport
+    breakpoint, so V5 is never clipped -- just pushed to its own row),
+    and st.button is a real widget, so clicking a node is a genuine
+    Python-level click, not a visual approximation. The clicked button
+    writes the shared ECDSA_SELECTED_VERSION_KEY session_state entry,
+    which the Version Inspector's selectbox below also uses -- so graph
+    and Inspector always agree on which version is selected, in both
+    directions (see render_ecdsa_section()).
+    """
+    selected_label = st.session_state.get(ECDSA_SELECTED_VERSION_KEY, versions[0]["label"])
+
+    n = len(versions)
+    ratios: list[float] = []
+    for i in range(n):
+        ratios.append(3)
+        if i < n - 1:
+            ratios.append(0.5)
+    cols = st.columns(ratios)
+    node_cols, arrow_cols = cols[0::2], cols[1::2]
+
+    for arrow_col in arrow_cols:
+        with arrow_col:
+            st.markdown(
+                "<div style='text-align:center; padding-top:2.6rem; "
+                "color:#94a3b8; font-size:1.5rem;'>→</div>",
+                unsafe_allow_html=True,
+            )
+
+    for col, version in zip(node_cols, versions):
+        with col:
+            with st.container(border=True):
+                is_selected = version["label"] == selected_label
+                clicked = st.button(
+                    f"{version['label']} · {version['source_commit']}",
+                    key=f"ecdsa_node_{version['label']}",
+                    type="primary" if is_selected else "secondary",
+                    width="stretch",
+                )
+                if clicked and not is_selected:
+                    # Force an immediate rerun rather than relying on this
+                    # same pass to reflect the new selection: the other
+                    # node buttons in this loop were already drawn (with
+                    # is_selected computed from the OLD session_state
+                    # value) before this click is discovered, so without a
+                    # rerun the just-clicked node would not visually
+                    # highlight until the next unrelated interaction.
+                    st.session_state[ECDSA_SELECTED_VERSION_KEY] = version["label"]
+                    st.rerun()
+                st.caption(format_short_date(version["date"]))
+                st.markdown(f"**Qubits** {version['qubits']:,}")
+                st.markdown(f"**Toffoli** {format_compact_number(version['toffoli'])}")
+                st.markdown(f"**Score** {format_compact_number(version['score'])}")
+
+
+def render_ecdsa_section() -> None:
+    """Render the full ECDSA.Fail dataset view: a compact research-facing
+    header, evolution graph, version inspector, arbitrary two-version
+    comparison, and evolution-metric trends. Reads only the small,
+    already-validated manifest.json (via src/ecdsa_adapter.py) -- never a
+    .kmx artifact -- and degrades to a clear error (rather than crashing
+    the app) if no manifest copy, local or bundled, can be found.
+    """
+    try:
+        bundle = load_ecdsa_bundle()
+    except ECDSADatasetUnavailable as exc:
+        st.header("Real-world circuit evolution")
+        st.error(f"ECDSA.Fail dataset unavailable.\n\n{exc}")
+        st.info(
+            "The rest of this demo (GHZ-5, QFT-entangled-5, ...) is unaffected -- "
+            "pick a different circuit/dataset above."
+        )
+        return
+
+    versions = bundle["versions"]
+    labels = [v["label"] for v in versions]
+    by_label = {v["label"]: v for v in versions}
+    metric_labels = {
+        "operations": "Operations",
+        "qubits": "Qubits",
+        "classical_bits": "Classical bits",
+        "toffoli": "Toffoli",
+        "score": "Score",
+    }
+
+    # -------------------------------------------------------------
+    # Header: three ideas in 30 seconds -- one logical circuit, a real
+    # chronological chain, multiple versions -- plus compact badges.
+    # Technical/debugging details (manifest path, dataset ids, the
+    # historical_successor relation label) move into a collapsed
+    # "Dataset source & provenance" expander below, not the headline.
+    # -------------------------------------------------------------
+    st.header("Real-world circuit evolution")
+    st.write(
+        "Five historical implementations of secp256k1 point addition, "
+        "from the ECDSA.Fail challenge."
+    )
+    with st.container(horizontal=True):
+        st.badge("REAL-WORLD DATASET", color="violet")
+        st.badge(f"{len(versions)} VERSIONS", color="blue")
+        st.badge(
+            f"{format_month_year(versions[0]['date'])} → {format_month_year(versions[-1]['date'])}",
+            color="gray",
+        )
+
+    with st.expander("Dataset source & provenance"):
+        st.write(f"**Dataset:** {bundle['dataset_name']}")
+        st.write(bundle["dataset_description"])
+        st.write(
+            f"**Logical circuit:** `{bundle['logical_circuit_name']}` "
+            f"(`{bundle['logical_circuit_id']}`)"
+        )
+        st.write(
+            "**Relation between versions:** `historical_successor` -- a real "
+            "chronological chain (each version is a later commit than the last), "
+            "not a claim about a specific known compiler optimization pass."
+        )
+        st.caption(f"Manifest source: {bundle['source']}")
+
+    st.divider()
+
+    # -------------------------------------------------------------
+    # Evolution graph -- see render_ecdsa_evolution_graph() for why this
+    # is native Streamlit widgets rather than an embedded SVG.
+    # -------------------------------------------------------------
+    st.subheader("Circuit Evolution Graph")
+    st.caption(
+        "One logical circuit, five historical versions, in commit order. "
+        "Click a version below, or use the selector in Inspect Circuit Version."
+    )
+    render_ecdsa_evolution_graph(versions)
+
+    st.divider()
+
+    # -------------------------------------------------------------
+    # Version Inspector: identity first, then four prominent metric
+    # cards, then secondary structural fields, then a collapsed
+    # provenance/artifact/verification expander.
+    # -------------------------------------------------------------
+    st.subheader("Inspect Circuit Version")
+    selected_label = st.selectbox("Select a version to inspect", labels, key=ECDSA_SELECTED_VERSION_KEY)
+    v = by_label[selected_label]
+
+    st.markdown(f"#### {v['label']}")
+    st.caption(f"commit `{v['source_commit']}` · {v['date'] or 'date unknown'}")
+
+    metric_cols = st.columns(4)
+    metric_cols[0].metric("Operations", format_compact_number(v["operations"]), border=True)
+    metric_cols[1].metric("Qubits", f"{v['qubits']:,}", border=True)
+    metric_cols[2].metric("Toffoli", format_compact_number(v["toffoli"]), border=True)
+    metric_cols[3].metric("Score", format_compact_number(v["score"]), border=True)
+    st.caption(
+        f"Exact values -- Operations: {v['operations']:,} · Toffoli: {v['toffoli']:,} · "
+        f"Score: {v['score']:,}"
+    )
+
+    sec_cols = st.columns(3)
+    sec_cols[0].write(f"**Classical bits:** {v['classical_bits']:,}")
+    sec_cols[1].write(f"**Registers:** {v['registers']}")
+    sec_cols[2].write(f"**Logical circuit:** {v['logical_circuit_name']}")
+
+    with st.expander("Provenance & artifact details"):
+        st.write(f"**Version ID:** `{v['version_id']}`")
+        st.write(f"**Logical circuit ID:** `{v['logical_circuit_id']}`")
+        artifact_format = Path(v["artifact_path"]).suffix.lstrip(".").upper() or "unknown"
+        st.write(f"**Artifact format:** {artifact_format}")
+        st.write(f"**Artifact reference:** `{v['artifact_path']}`")
+        st.write(f"**SHA-256:** `{v['artifact_sha256']}`")
+        st.divider()
+        round_trip = v["serialization_round_trip"]
+        correctness = v["benchmark_correctness"]
+        round_trip_icon = "✅" if round_trip == "passed" else "⚠️"
+        st.write(f"{round_trip_icon} **Serialization round-trip:** `{round_trip}`")
+        st.caption(
+            "The exported artifact was parsed back and its operation count matched "
+            "-- this checks serialization, not circuit semantics."
+        )
+        st.write(f"**Benchmark correctness:** `{correctness}`")
+        if correctness != "verified":
+            st.caption(
+                "This does **not** mean the official ECDSA.Fail trusted benchmark "
+                "correctness check was reproduced locally -- only that serialization "
+                "round-tripped. A passing round-trip is not the same as a circuit "
+                "verified correct."
+            )
+
+    st.divider()
+
+    # -------------------------------------------------------------
+    # Compare Versions: a compact, neutral trade-off summary above the
+    # preserved detailed table (any two versions, delta = B - A).
+    # -------------------------------------------------------------
+    st.subheader("Compare Versions")
+    st.caption("Compare any two ECDSA.Fail versions. Convention: delta = Version B − Version A.")
+
+    col_a, col_b = st.columns(2)
+    with col_a:
+        label_a = st.selectbox("Version A", labels, index=0, key="ecdsa_compare_a")
+    with col_b:
+        default_b = min(1, len(labels) - 1)
+        label_b = st.selectbox("Version B", labels, index=default_b, key="ecdsa_compare_b")
+
+    version_a, version_b = by_label[label_a], by_label[label_b]
+    comparison = compare_ecdsa_versions(version_a, version_b)
+
+    if label_a == label_b:
+        st.info("Version A and Version B are the same version.")
+    else:
+        st.markdown(f"**{label_a} → {label_b} trade-off**")
+        summary_rows = build_tradeoff_summary(comparison, ECDSA_SUMMARY_METRICS, metric_labels)
+        summary_cols = st.columns(len(summary_rows))
+        for col, row in zip(summary_cols, summary_rows):
+            with col:
+                st.caption(row["label"])
+                st.markdown(f"**{row['display']}**")
+
+        if is_multi_objective_tradeoff(comparison, ECDSA_SUMMARY_METRICS):
+            st.caption(
+                "This transition illustrates a multi-objective trade-off: some "
+                "metrics increase while others decrease. Circuit evolution here "
+                "does not reduce to a single, always-improving number."
+            )
+
+    with st.expander("Detailed comparison table", expanded=True):
+        rows = []
+        for key in ECDSA_COMPARISON_METRICS:
+            entry = comparison[key]
+            rows.append(
+                {
+                    "Metric": metric_labels[key],
+                    f"A ({label_a})": f"{entry['a']:,}",
+                    f"B ({label_b})": f"{entry['b']:,}",
+                    "Delta (B − A)": f"{entry['delta']:+,}",
+                    "% change": format_signed_pct_with_arrow(entry["delta"], entry["pct_change"]),
+                }
+            )
+        st.table(pd.DataFrame(rows).set_index("Metric"))
+        st.caption(
+            "↑ / ↓ indicate direction only, not desirability -- an increase is not "
+            "automatically worse, and a decrease is not automatically better."
+        )
+
+    st.divider()
+
+    # -------------------------------------------------------------
+    # Evolution Metrics: chronological context folded into each trend
+    # chart's x-axis labels (version + short date), instead of a
+    # separate, redundant date listing.
+    # -------------------------------------------------------------
+    st.subheader("Evolution Metrics")
+    st.caption(
+        "Chronological trend per metric, V1 through V5. Each metric keeps its own "
+        "axis since operations/qubits/Toffoli/score differ by orders of magnitude."
+    )
+
+    legend_cols = st.columns(len(versions))
+    for col, version in zip(legend_cols, versions):
+        with col:
+            st.markdown(f"**{version['label']}**")
+            st.caption(format_short_date(version["date"]))
+
+    trend_df = pd.DataFrame(
+        {
+            "Operations": [v["operations"] for v in versions],
+            "Qubits": [v["qubits"] for v in versions],
+            "Toffoli": [v["toffoli"] for v in versions],
+            "Score": [v["score"] for v in versions],
+        },
+        index=[chart_index_label(v) for v in versions],
+    )
+    trend_cols = st.columns(4)
+    for col, metric in zip(trend_cols, trend_df.columns):
+        with col:
+            st.caption(metric)
+            st.line_chart(trend_df[[metric]], width="stretch", height=180)
+
+    with st.expander("Overall evolution (V1 → V5)"):
+        first, last = versions[0], versions[-1]
+        st.write(f"**Qubits:** {first['qubits']:,} → {last['qubits']:,}")
+        st.write(
+            f"**Toffoli:** {format_compact_number(first['toffoli'])} → "
+            f"{format_compact_number(last['toffoli'])}"
+        )
+        st.write(
+            f"**Score:** {format_compact_number(first['score'])} → "
+            f"{format_compact_number(last['score'])}"
+        )
+
+
 st.set_page_config(page_title="Quantum Circuit Hub", page_icon=":link:", layout="wide")
 
 # ---------------------------------------------------------------------
@@ -272,13 +606,22 @@ with st.expander("Why QCH? (research motivation)"):
 st.divider()
 
 # ---------------------------------------------------------------------
-# Circuit picker.
+# Circuit / dataset picker. Two families are offered side by side: the
+# small hand-authored/MQT-Bench demo circuits (CATALOG), and the
+# real-world ECDSA.Fail historical dataset (ECDSA_KEY) -- see
+# docs/ECDSA_INTEGRATION.md for why the latter uses a separate data model
+# and rendering path instead of being forced through circuit_catalog.py.
 # ---------------------------------------------------------------------
 circuit_key = st.selectbox(
-    "Select a quantum circuit",
-    options=list(CATALOG.keys()),
-    format_func=lambda key: CATALOG[key][0],
+    "Select a circuit / dataset",
+    options=list(CATALOG.keys()) + [ECDSA_KEY],
+    format_func=lambda key: ECDSA_DISPLAY_NAME if key == ECDSA_KEY else CATALOG[key][0],
 )
+
+if circuit_key == ECDSA_KEY:
+    st.divider()
+    render_ecdsa_section()
+    st.stop()
 
 try:
     bundle = load_circuit_bundle(circuit_key)
