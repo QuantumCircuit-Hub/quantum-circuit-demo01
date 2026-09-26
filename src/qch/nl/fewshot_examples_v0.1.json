@@ -1,0 +1,63 @@
+[
+  {
+    "id": "FS1",
+    "concept": "metric_lookup",
+    "question": "What is the benchmark score of V10?",
+    "output": {"operation": "get_metric", "version": "V10", "metric": "score"}
+  },
+  {
+    "id": "FS2",
+    "concept": "filtering",
+    "question": "List versions with structural qubit count above 500.",
+    "output": {"operation": "filter_versions", "conditions": [{"metric": "structural.qubit_count", "operator": ">", "value": 500}]}
+  },
+  {
+    "id": "FS3",
+    "concept": "transition_delta",
+    "question": "Find promoted transitions where structural qubit count decreased.",
+    "output": {
+      "steps": [
+        {"operator": "list_transitions", "params": {"relation_type": "next_promoted_commit"}},
+        {"operator": "compute_delta", "params": {"metric": "structural.qubit_count"}},
+        {"operator": "filter", "params": {"conditions": [{"metric": "structural.qubit_count_delta", "operator": "<", "value": 0}]}}
+      ]
+    }
+  },
+  {
+    "id": "FS4",
+    "concept": "compositional_sort_limit",
+    "question": "Which version has the highest structural operation count?",
+    "output": {
+      "steps": [
+        {"operator": "list_versions", "params": {}},
+        {"operator": "filter", "params": {"conditions": [{"metric": "structural.operation_count", "operator": ">", "value": 0}]}},
+        {"operator": "sort", "params": {"by": "structural.operation_count", "order": "desc"}},
+        {"operator": "limit", "params": {"k": 10}}
+      ]
+    }
+  },
+  {
+    "id": "FS5",
+    "concept": "ambiguity",
+    "question": "Which version is most efficient?",
+    "output": {"status": "ambiguous", "clarification": "'Most efficient' does not name a specific metric. Please specify which one, e.g. structural.toffoli_count, structural.qubit_count, or score."}
+  },
+  {
+    "id": "FS6",
+    "concept": "unknown_metric",
+    "question": "Use the stability_index metric to rank versions.",
+    "output": {"status": "unknown_metric", "reason": "'stability_index' is not a known QCH metric."}
+  },
+  {
+    "id": "FS7",
+    "concept": "relation_traversal",
+    "question": "What is the parent of V11?",
+    "output": {"operation": "traverse", "version": "V11", "direction": "predecessors", "relation_type": "next_promoted_commit"}
+  },
+  {
+    "id": "FS8",
+    "concept": "version_comparison",
+    "question": "Compare V10 and V11 by score.",
+    "output": {"operation": "compare_versions", "version_a": "V10", "version_b": "V11", "metrics": ["score"]}
+  }
+]
