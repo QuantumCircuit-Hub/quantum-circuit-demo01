@@ -26,6 +26,7 @@ SRC_DIR = PROJECT_ROOT / "src"
 if str(SRC_DIR) not in sys.path:
     sys.path.insert(0, str(SRC_DIR))
 
+from qch_navigation import MAIN_PAGE_TITLE, render_main_navigation  # noqa: E402
 from circuit_catalog import (  # noqa: E402
     CATALOG,
     MissingDataError,
@@ -572,12 +573,14 @@ def render_ecdsa_section() -> None:
         )
 
 
-st.set_page_config(page_title="Quantum Circuit Hub", page_icon=":link:", layout="wide")
+st.set_page_config(page_title=f"{MAIN_PAGE_TITLE} · QCH", page_icon=":link:", layout="wide")
+render_main_navigation()
 
 # ---------------------------------------------------------------------
 # Landing: positioning first, in under 30 seconds of reading.
 # ---------------------------------------------------------------------
-st.title("Quantum Circuit Hub")
+st.title("QCH — Quantum Circuit Hub")
+st.header(MAIN_PAGE_TITLE)
 st.markdown("#### A database for the evolution of quantum circuits.")
 st.write(
     "Store, search, compare, and trace quantum circuits across optimization "

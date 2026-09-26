@@ -7,6 +7,25 @@ __pycache__/
 # Virtual environment
 .venv/
 
+# QCH stores created by running examples/scripts locally (e.g.
+# examples/import_qasm.py, scripts/import_ecdsa_db1.py) -- local
+# scratch data, never checked in.
+*.sqlite3
+# ...except the ONE production demo snapshot the deployed Ask QCH page reads
+# (read-only at query time). Backups and other local stores stay ignored.
+!/data/qch_ecdsa_p17.sqlite3
+
+# Public-deployment exclusions (Streamlit Community Cloud readiness):
+# raw external API snapshots (contain third-party personal data), database
+# backups, the store's local artifact scratch directory, experiment
+# results/logs, and local assistant configuration.
+data/external/
+data/backups/
+data/*.sqlite3.artifacts/
+results/
+*.log
+.claude/
+
 # data/raw and data/processed only ever hold the small, hand-authored
 # qft_3 demo circuit (Phases 1-3) and ARE committed -- the app needs them
 # to run. Bulk/generated MQT Bench data lives under data/mqtbench/

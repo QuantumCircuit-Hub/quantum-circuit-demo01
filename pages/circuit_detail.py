@@ -28,8 +28,10 @@ from circuit_catalog import (  # noqa: E402
     qasm_path,
 )
 from evolution_data import stage_label  # noqa: E402
+from qch_navigation import MAIN_PAGE_TITLE, render_main_navigation  # noqa: E402
 
 st.set_page_config(page_title="Circuit Detail", page_icon=":mag:", layout="wide")
+render_main_navigation()
 
 params = st.query_params
 circuit_key = params.get("circuit")
@@ -41,7 +43,7 @@ if not circuit_key or not version or circuit_key not in CATALOG:
         "No circuit selected. Open this page by clicking a version box in "
         "the evolution graph on the main page."
     )
-    st.page_link("app.py", label="← Back to Quantum Circuit Hub")
+    st.page_link("app.py", label=f"← Back to {MAIN_PAGE_TITLE}")
     st.stop()
 
 try:
@@ -52,7 +54,7 @@ except MissingDataError as exc:
 
 if version not in bundle["records"]:
     st.error(f"Unknown version '{version}' for circuit '{circuit_key}'.")
-    st.page_link("app.py", label="← Back to Quantum Circuit Hub")
+    st.page_link("app.py", label=f"← Back to {MAIN_PAGE_TITLE}")
     st.stop()
 
 record = bundle["records"][version]
@@ -61,7 +63,7 @@ provenance = record["provenance"]
 
 stage = stage_label(None if version == bundle["root_version"] else provenance.get("transformation"))
 
-st.page_link("app.py", label="← Back to Quantum Circuit Hub")
+st.page_link("app.py", label=f"← Back to {MAIN_PAGE_TITLE}")
 st.title(f"{bundle['display_name']}")
 st.subheader(f"Version {version} — {stage}")
 st.caption(record["circuit_id"])

@@ -14,3 +14,8 @@
 # etc.), see requirements-dev.txt instead.
 streamlit==1.63.0
 networkx==3.6.1
+# Imported directly by the deployed pages (app.py uses pandas; the Ask QCH
+# page / qch.nl use requests). Both also arrive as streamlit dependencies;
+# declared explicitly at the versions tested locally with Python 3.11.
+pandas==3.0.5
+requests==2.34.2
