@@ -36,3 +36,20 @@ results/
 Thumbs.db
 .vscode/
 .idea/
+
+# From the original quantum-circuit-hub .gitignore (curated subset):
+# secrets, local env files and tool caches.
+.env
+.envrc
+.streamlit/secrets.toml
+venv/
+env/
+build/
+dist/
+htmlcov/
+.coverage
+.coverage.*
+.mypy_cache/
+.ruff_cache/
+.hypothesis/
+.ipynb_checkpoints/

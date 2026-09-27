@@ -75,5 +75,31 @@ Stability" section before depending on it in a long-lived project.
   manifest for portable/offline demo use (see docs/ECDSA_INTEGRATION.md)
 - `src` — application and library source code
 - `tests` — automated tests
-- `scripts` — one-off or utility scripts
-- `docs` — design notes and documentation
+- `scripts` — import, query and evaluation scripts (backend-agnostic)
+- `audits` — read-only, deliberately SQLite-specific data audits
+- `examples` — small runnable API examples
+- `docs` — design notes and documentation (including
+  `docs/qch-core-conceptual-schema-v0.1.md` from the original
+  QuantumCircuit-Hub/quantum-circuit-hub repository)
+
+## Vision
+
+QCH aims to become an open infrastructure and community for quantum circuit
+data management and research: circuit storage and management, metadata and
+provenance, versioning and evolution, exact and approximate search,
+equivalence and similarity, optimization and rewriting, benchmark collection
+and evaluation, and reproducible quantum computing research. Planned
+components: QCH-Data, QCH-Core, QCH-Search, QCH-Opt and QCH-Bench (see
+`docs/qch-core-conceptual-schema-v0.1.md`).
+
+This repository combines the history of QuantumCircuit-Hub/quantum-circuit-demo01
+(prototype, database, query system, demo app, tests) with the original
+QuantumCircuit-Hub/quantum-circuit-hub project skeleton; see
+`docs/REPOSITORY_CONSOLIDATION.md`.
+
+## License
+
+The code is licensed under the Apache License 2.0 (see `LICENSE`, inherited from the
+original quantum-circuit-hub repository). Third-party data bundled or derived
+here (for example ECDSA.Fail submission data and MQT Bench circuits) keeps its
+own terms; see `docs/REPOSITORY_CONSOLIDATION.md`.
