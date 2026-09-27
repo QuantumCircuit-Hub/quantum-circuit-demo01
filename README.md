@@ -48,6 +48,25 @@ its own adapter rather than the QASM-based circuit model below. See
 data flow, the `QCH_ECDSA_DATASET_ROOT` configuration variable, and how
 the demo stays lightweight and portable for deployment.
 
+## QCH Python database API (early access)
+
+Alongside the Streamlit demo, this repository also contains the start
+of a general-purpose, storage-independent Quantum Circuit Hub database
+and Python API (`src/qch/`) — not specific to any one dataset, and not
+yet used by the Streamlit demo above.
+
+- [`docs/GETTING_STARTED.md`](docs/GETTING_STARTED.md) — task-by-task
+  guide: opening a store, importing a QASM file, importing ECDSA.Fail
+  data, and querying everything back out.
+- [`docs/API_REFERENCE.md`](docs/API_REFERENCE.md) — every current
+  public method, dataclass, and exception.
+- [`docs/DB1_ARCHITECTURE.md`](docs/DB1_ARCHITECTURE.md) — the design
+  rationale (why `CircuitVersion` identity is modeled the way it is,
+  idempotency, verification semantics, schema versioning).
+
+This is an early, evolving API — see API_REFERENCE.md's "Current API
+Stability" section before depending on it in a long-lived project.
+
 ## Layout
 
 - `data/raw` — unmodified input data (e.g. downloaded MQT Bench circuits)

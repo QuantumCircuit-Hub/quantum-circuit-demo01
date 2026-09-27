@@ -1,0 +1,41 @@
+{
+  "benchmark_name": "QCH-NL-Plan Benchmark v0.1",
+  "benchmark_version": "0.1.0",
+  "schema_version": "0.3.0",
+  "schema_file": "docs/qch_query_schema.json",
+  "benchmark_file": "src/qch/nl/benchmark_cases.json",
+  "benchmark_file_sha256": "adf3c97deb87a9ea82c99d69d86b6cf42c46311790e19c136d33f3c809d4c674",
+  "number_of_questions": 62,
+  "category_count": 15,
+  "categories": [
+    "metric_lookup", "version_comparison", "filtering", "ranking", "transition_queries",
+    "delta_change", "temporal", "trajectory", "provenance", "multi_condition",
+    "ambiguity", "unsupported", "unknown_entity", "metric_semantic_trap", "injection"
+  ],
+  "fewshot_development_set_file": "src/qch/nl/fewshot_examples_v0.1.json",
+  "fewshot_development_set_sha256": "25576e3e7d761b19f7b49336b3e2439a7541f41957291db8e7951d617e3e14f0",
+  "fewshot_development_set_size": 8,
+  "fewshot_development_set_disjoint_from_benchmark": true,
+  "git_commit": "aeabc6ec1aa4682b15f5d8a455a11897c5863835",
+  "frozen_at": "2026-09-21",
+  "frozen_by_phase": "Phase 2A-2 (freeze step, before any LLM evaluation)",
+  "deterministic_baseline_result": {
+    "backend": "DeterministicHeuristicBackend (\"Baseline H\") -- NOT a language model, see docs/QCH_NL_PLANNER_PHASE2A.md",
+    "benchmark_size": 62,
+    "plan_ready": 38,
+    "ambiguous": 7,
+    "unsupported_operation": 13,
+    "unknown_metric": 2,
+    "unknown_entity": 2,
+    "invalid_plan": 0,
+    "status_agreement_rate": 1.0,
+    "schema_validation_pass_rate_of_plan_ready_cases": 1.0,
+    "semantic_match_rate_of_comparable_gold_plans": 1.0,
+    "caveat": "This is an infrastructure/baseline result for a hand-written heuristic rule set, NOT an LLM-accuracy claim. It must never be reported or compared as if it were a language model's performance -- see Phase 2A-2 spec section 33."
+  },
+  "notes": [
+    "This manifest freezes the 62 questions, their expected_status values, and their gold_plan values exactly as they existed at the end of Phase 2A.",
+    "During Phase 2A-2 (real LLM evaluation), the 62 questions/statuses/gold plans in benchmark_cases.json MUST NOT be edited. If a genuine authoring error in v0.1 is discovered during LLM evaluation, it must be recorded and reported separately (never silently patched in v0.1) -- a correction becomes v0.1.1 or v0.2 AFTER this evaluation completes, per the Phase 2A-2 spec section 1.",
+    "The few-shot development set (src/qch/nl/fewshot_examples_v0.1.json) is a SEPARATE, also-frozen file: 8 hand-authored examples covering metric_lookup, filtering, transition_delta, compositional_sort_limit, ambiguity, unknown_metric, relation_traversal, and version_comparison concepts, using version labels (V10, V11) and phrasing that do not appear in the 62 benchmark questions."
+  ]
+}
