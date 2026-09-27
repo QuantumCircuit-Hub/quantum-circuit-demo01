@@ -79,8 +79,8 @@ probably from a mistyped push command. It is left untouched and was not committe
   - MQT Bench-derived circuits under `data/mqtbench/`: MQT Bench is MIT-licensed.
 - **Research-supplement rows** (schema v6/v7: Note C labels and the paper populations) come from
   `jieyilong/ecdsafail-supplemental-materials`, **which declares no license**. They exist only in the
-  local working-copy DB. The DB committed on the branch is still the already-public schema-v5 store
-  (D3).
+  local working-copy DB. The branch commits the already-public store migrated to schema v7 with **empty**
+  research tables (D3).
 
 ---
 
@@ -118,7 +118,8 @@ in the old repository, and would still require re-pointing the Streamlit app.
 | `README.md` | both | **conflict**: demo version plus the hub's Vision and License sections, and a pointer to this document |
 | `.mailmap` | new | maps the machine-local author address and the "Jiaheng" identity to `Jiaheng Lu <jiahenglu@gmail.com>` for display only; history is not rewritten |
 | `docs/REPOSITORY_CONSOLIDATION.md` | new | this document |
-| `data/qch_ecdsa_p17.sqlite3` | demo (v5) | **unchanged on the branch**; the local v7 working copy stays uncommitted (D3) |
+| `data/qch_ecdsa_p17.sqlite3` | demo (v5, SHA-256 `758415f4…`) | replaced by the same store migrated to schema v7 (`05affbde…`), with the research tables empty. All 20 v5 tables are content-identical; integrity ok, 0 FK violations. Without this, tests and the app opening the v5 store would write migrations 006/007 into the tracked file. The local v7 working copy with research rows stays uncommitted (D3). |
+| `.gitattributes` | new | keeps the two checksum-frozen NL benchmark JSON files LF on every platform (a Windows checkout with `core.autocrlf` broke their frozen SHA-256 test); marks `*.sqlite3` binary |
 | `data/external/`, `data/backups/`, `results/`, `.venv/` | local | not migrated (ignored) |
 
 ---
@@ -138,6 +139,8 @@ in the old repository, and would still require re-pointing the Streamlit app.
 | C9 | The dev container disables Streamlit's CORS and XSRF protection | D7 |
 | C10 | The Streamlit Cloud app's repository binding is unknown | D4 |
 | C11 | Stray file `h origin ui-improvement` | left untracked; delete it locally if unneeded |
+| C12 | A fresh Windows checkout failed 2 frozen-checksum tests (CRLF conversion) | fixed by `.gitattributes` |
+| C13 | The code expects schema v7; the committed store was v5, and opening it (tests, `pages/Ask_QCH.py`) migrated the tracked file in place | fixed by committing the migrated v7 store, with no research rows |
 
 ---
 
@@ -215,7 +218,7 @@ Nothing is deleted at any step, so every step can be undone.
 |---|---|
 | D1 | Confirm there are no student contributions outside these two repositories (forks, other repos, unpushed clones) before archiving. None are visible in Git or on GitHub. |
 | D2 | Adopt Apache-2.0 for the combined code. It is inherited from the hub repo; the demo code had no license. |
-| D3 | Whether to commit the schema-v7 working-copy DB. It adds rows derived from an unlicensed source, so ask the authors or keep it private. Until then the branch keeps the public schema-v5 store. |
+| D3 | Whether to commit the research-supplement rows (Note C labels, paper populations): 414 + 8 memberships and 404 labels from an unlicensed source. Ask the authors, or keep them local. Until then the branch's store has the v7 schema with empty research tables. |
 | D4 | Streamlit Cloud: which repository and branch the app is deployed from, and whether to re-link it after the rename. |
 | D5 | Replace the hard-coded local paths with environment variables so other contributors can run the real-data tests. |
 | D6 | Keep the `.mailmap` display mapping (history is never rewritten). |
