@@ -1,0 +1,195 @@
+{
+  "note": "Candidate pool for the Ask QCH example buttons. B* = the five current examples (baseline). C* = candidates. Identifiers were checked against the real store before inclusion.",
+  "candidates": [
+    {
+      "id": "B1",
+      "category": "ranking (structural metric)",
+      "question": "Which version has the lowest structural Toffoli count?"
+    },
+    {
+      "id": "B2",
+      "category": "transition ranking",
+      "question": "Which transition reduced structural Toffoli count the most?"
+    },
+    {
+      "id": "B3",
+      "category": "version threshold filter",
+      "question": "Which versions have structural Toffoli count below 950000?"
+    },
+    {
+      "id": "B4",
+      "category": "branch/evolution",
+      "question": "Which validated-unpromoted versions branched from ecdsafail:1196b9f?"
+    },
+    {
+      "id": "B5",
+      "category": "underspecified superlative",
+      "question": "Which version is best?"
+    },
+    {
+      "id": "C1",
+      "category": "entity describe (submission)",
+      "question": "Describe submission 8e9c9a2."
+    },
+    {
+      "id": "C2",
+      "category": "entity describe (version)",
+      "question": "Tell me about ecdsafail:897dda2."
+    },
+    {
+      "id": "C3",
+      "category": "official metric lookup",
+      "question": "What is the official score of submission 8e9c9a2?"
+    },
+    {
+      "id": "C4",
+      "category": "multi-metric lookup (official)",
+      "question": "What are the official peak qubits and average executed Toffoli of submission 3616dbf?"
+    },
+    {
+      "id": "C5",
+      "category": "multi-metric lookup (official)",
+      "question": "What are the official score, official peak qubits and official average executed Toffoli of 8e9c9a2?"
+    },
+    {
+      "id": "C6",
+      "category": "structural metric lookup",
+      "question": "What is the structural Toffoli count of version ecdsafail:897dda2?"
+    },
+    {
+      "id": "C7",
+      "category": "multi-metric lookup (structural)",
+      "question": "What are the structural Toffoli count and structural qubit count of ecdsafail:897dda2?"
+    },
+    {
+      "id": "C8",
+      "category": "comparison (official)",
+      "question": "How much did the official score change from 3616dbf to 8e9c9a2?"
+    },
+    {
+      "id": "C9",
+      "category": "comparison (structural)",
+      "question": "Compare the structural Toffoli count of ecdsafail:897dda2 and ecdsafail:cae8c82."
+    },
+    {
+      "id": "C10",
+      "category": "submission threshold filter",
+      "question": "Which submissions have an official score below 1140000000?"
+    },
+    {
+      "id": "C11",
+      "category": "submission threshold filter",
+      "question": "Which submissions have official peak qubits below 793?"
+    },
+    {
+      "id": "C12",
+      "category": "status + threshold filter",
+      "question": "Which rejected submissions have an official score below 1200000000?"
+    },
+    {
+      "id": "C13",
+      "category": "contributor -> submissions",
+      "question": "Which submissions were submitted by odinfree?"
+    },
+    {
+      "id": "C14",
+      "category": "contributor describe",
+      "question": "Describe contributor odinfree."
+    },
+    {
+      "id": "C15",
+      "category": "alias resolution (contributor)",
+      "question": "Which submissions were submitted by welttowelt?"
+    },
+    {
+      "id": "C16",
+      "category": "contributor attribution",
+      "question": "Who submitted ecdsafail:37ab267?"
+    },
+    {
+      "id": "C17",
+      "category": "branch/evolution (small)",
+      "question": "Which versions branched from ecdsafail:c24c306?"
+    },
+    {
+      "id": "C18",
+      "category": "transition predicate (relative + direction)",
+      "question": "Find versions where the structural Toffoli count decreased by more than 1% while the structural qubit count decreased"
+    },
+    {
+      "id": "C19",
+      "category": "transition predicate (benchmark, milestones)",
+      "question": "Find milestone transitions where the benchmark Toffoli count decreased by more than 40%"
+    },
+    {
+      "id": "C20",
+      "category": "transition predicate (opposite directions)",
+      "question": "Find versions where the structural Toffoli count increased and the structural qubit count decreased"
+    },
+    {
+      "id": "C21",
+      "category": "numeric submission prefix + multi-metric",
+      "question": "What are the official peak qubits and score of submission 02103492?"
+    },
+    {
+      "id": "C22",
+      "category": "comparison (numeric prefix)",
+      "question": "How much did the official peak qubits change from submission 02103492 to 8e9c9a2?"
+    },
+    {
+      "id": "C23",
+      "category": "ranking (official)",
+      "question": "Which submission has the lowest official score?"
+    },
+    {
+      "id": "C24",
+      "category": "status + contributor filter",
+      "question": "Which promoted submissions were submitted by odinfree?"
+    },
+    {
+      "id": "C25",
+      "category": "transition absolute magnitude",
+      "question": "Find versions where the structural qubit count decreased by more than 10"
+    },
+    {
+      "id": "C26",
+      "category": "milestone comparison",
+      "question": "Compare the official score of ecdsafail:422f21d and ecdsafail:a39e07e."
+    },
+    {
+      "id": "C27",
+      "category": "version describe (milestone label)",
+      "question": "Tell me about V5."
+    },
+    {
+      "id": "C28",
+      "category": "official-metrics collection filter",
+      "question": "Which rejected submissions have official metrics?"
+    },
+    {
+      "id": "C29",
+      "category": "contributor -> submissions (small)",
+      "question": "Which submissions were submitted by Rossnkama?"
+    },
+    {
+      "id": "C30",
+      "category": "alias + status + threshold filter",
+      "question": "Which promoted submissions by welttowelt have an official score below 1140000000?"
+    },
+    {
+      "id": "C31",
+      "category": "evolution neighbourhood (describe)",
+      "question": "Tell me about ecdsafail:c24c306."
+    },
+    {
+      "id": "C32",
+      "category": "status + threshold filter",
+      "question": "Which promoted submissions have an official score below 1140000000?"
+    },
+    {
+      "id": "C33",
+      "category": "contributor + status + official metrics",
+      "question": "Which promoted submissions by teddyjfpender have official metrics?"
+    }
+  ]
+}

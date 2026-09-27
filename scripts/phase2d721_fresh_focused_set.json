@@ -1,0 +1,27 @@
+{
+  "frozen_at": "2026-09-25 (Phase 2D.7.2.1, before the evaluation run)",
+  "note": "Real store, read-only. E* = direct executor invocations (validator bypassed on purpose). M* = service questions (compositional routing on); `choice` is the user's selection of a displayed magnitude option; `gold_condition` is the single filter condition the frozen Phase 2D.7.2 compiler must emit after the choice.",
+  "executor": [
+    {"id": "E1", "kind": "P12 zero input records (toffoli_count is on both endpoints of no promoted transition)", "relation": "next_promoted_commit", "list_metric": "toffoli_count",
+     "conditions": [{"metric": "structural.toffoli_count_delta", "operator": "<", "value": "0.1 * -1 * structural.toffoli_count"}], "gold_status": "invalid_plan"},
+    {"id": "E2", "kind": "P12 earlier condition removes everything (the real LLM plan)", "relation": "next_promoted_commit",
+     "conditions": [{"metric": "structural.toffoli_count_delta", "operator": "<", "value": 0}, {"metric": "structural.qubit_count_delta", "operator": ">", "value": 0},
+                    {"metric": "structural.toffoli_count_delta", "operator": "<", "value": "0.1 * -1 * structural.toffoli_count"}], "gold_status": "invalid_plan"},
+    {"id": "E3", "kind": "P12 percentage string", "relation": "next_promoted_commit",
+     "conditions": [{"metric": "structural.toffoli_count_pct_change", "operator": "<", "value": "-10%"}], "gold_status": "invalid_plan"},
+    {"id": "E4", "kind": "valid numeric RHS, empty result", "relation": "next_promoted_commit",
+     "conditions": [{"metric": "structural.toffoli_count_pct_change", "operator": "<", "value": -10.0}], "gold_status": "answerable", "gold_rows": 0}
+  ],
+  "questions": [
+    {"id": "M1", "question": "Find versions where the structural Toffoli count decreased by 5%", "gold_options": ["At least 5%", "More than 5%"]},
+    {"id": "M2", "question": "Find versions where the structural Toffoli count increased by 12%", "gold_options": ["At least 12%", "More than 12%"]},
+    {"id": "M3", "question": "Find versions where the structural Toffoli count decreased by 0.5%", "choice": "At least 0.5%",
+     "gold_condition": ["structural.toffoli_count_pct_change", "<=", -0.5]},
+    {"id": "M4", "question": "Find versions where the structural Toffoli count decreased by 0.5%", "choice": "More than 0.5%",
+     "gold_condition": ["structural.toffoli_count_pct_change", "<", -0.5]},
+    {"id": "M5", "question": "Find versions where the structural Toffoli count increased by 2%", "choice": "At least 2%",
+     "gold_condition": ["structural.toffoli_count_pct_change", ">=", 2.0]},
+    {"id": "M6", "question": "Find versions where the structural Toffoli count increased by 2%", "choice": "More than 2%",
+     "gold_condition": ["structural.toffoli_count_pct_change", ">", 2.0]}
+  ]
+}
