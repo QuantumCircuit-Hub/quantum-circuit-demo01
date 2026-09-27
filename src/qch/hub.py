@@ -29,6 +29,7 @@ from qch.services import (
     BenchmarksService,
     CircuitsService,
     ContributorsService,
+    ResearchSupplementsService,
     EvaluationsService,
     EvolutionService,
     IngestionService,
@@ -84,6 +85,8 @@ class QCH:
         self.evaluations = EvaluationsService(storage)
         # QCH Phase 2D.6: contributor provenance (identities, aliases, contributions).
         self.contributors = ContributorsService(storage)
+        # QCH schema v6: research-supplement annotations (pinned sources, technique labels, populations).
+        self.research = ResearchSupplementsService(storage)
         resolved_artifact_store = artifact_store if artifact_store is not None else _default_artifact_store(":memory:")
         self.materializations = MaterializationsService(storage, resolved_artifact_store, materializers or [])
         self.structures = StructuralAnalysisService(storage, resolved_artifact_store, structural_parsers or [])

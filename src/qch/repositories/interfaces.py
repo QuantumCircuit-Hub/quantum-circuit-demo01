@@ -37,11 +37,15 @@ from qch.models import (
     IngestionJob,
     LogicalCircuit,
     MaterializationJob,
+    PopulationMembership,
+    ResearchPopulation,
+    ResearchSource,
     SourceCommit,
     StructuralMetric,
     Submission,
     SubmissionEvaluation,
     SubmissionSourceCommit,
+    TechniqueLabel,
     TransformationEdge,
     VerificationResult,
 )
@@ -500,4 +504,64 @@ class Storage(Protocol):
     def list_latest_contributions(self) -> dict[str, list[Contribution]]:
         """submission_id -> its contributions from the most recently
         fetched contributor-imported snapshot that contains it."""
+        ...
+
+    # -- QCH schema v6: research-supplement annotations ------------------------
+
+    def record_research_import(
+        self,
+        source: ResearchSource,
+        labels: list[TechniqueLabel],
+        population: ResearchPopulation | None,
+        memberships: list[PopulationMembership],
+    ) -> bool:
+        """ONE transaction: inserts the source record and every label,
+        population and membership row derived from it. Idempotent by
+        source_id: if the source was already imported with byte-identical
+        content (same sha256, same rows), returns False and writes nothing.
+        If a stored row for the same source conflicts with the incoming one
+        (different sha256, label, population or membership), raises
+        ValidationError with a diagnostic and writes nothing -- a conflicting
+        re-import is never silently overwritten. All-or-nothing on any failure."""
+        ...
+
+    def get_research_source(self, source_id: str) -> ResearchSource | None: ...
+
+    def list_research_sources(self) -> list[ResearchSource]: ...
+
+    def list_technique_labels(self, source_id: str | None = None) -> list[TechniqueLabel]:
+        """Ordered by source_id, then source_row_number."""
+        ...
+
+    def record_research_populations(
+        self,
+        source: ResearchSource,
+        entries: list[tuple[ResearchPopulation, list[PopulationMembership]]],
+        renames: dict[str, str] | None = None,
+    ) -> bool:
+        """ONE transaction (schema v7): inserts `source` if absent, then each
+        population with its memberships, in list order (a candidate set
+        before the frontier derived from it). Per population:
+        - stored identically (fields + member set) -> nothing to do;
+        - absent -> inserted with its members;
+        - `renames[population_id]` names the stored row's EXPECTED former
+          name and the stored member set equals the incoming one -> the
+          population row is corrected in place (name, semantics, rule text,
+          role, provenance); membership rows are never rewritten;
+        - anything else (different members, unexpected stored name, name
+          taken by another population, differing source identity) ->
+          ValidationError, nothing written.
+        Returns False when nothing was written. All-or-nothing on any failure."""
+        ...
+
+    def get_research_population(self, name: str) -> ResearchPopulation | None: ...
+
+    def get_research_population_by_id(self, population_id: str) -> ResearchPopulation | None: ...
+
+    def list_research_populations(self) -> list[ResearchPopulation]:
+        """Ordered by name."""
+        ...
+
+    def list_population_memberships(self, population_id: str) -> list[PopulationMembership]:
+        """Ordered by source_ref."""
         ...
