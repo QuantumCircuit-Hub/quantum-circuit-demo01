@@ -91,7 +91,7 @@ def test_migration_adds_only_contributor_tables():
         conn = h._storage._conn
         tables = {r[0] for r in conn.execute("SELECT name FROM sqlite_master WHERE type='table'")}
         assert {"contributor_identity", "contributor_alias", "contribution", "contributor_import"} <= tables
-        assert {r[0] for r in conn.execute("SELECT version FROM schema_migrations")} == {1, 2, 3, 4, 5, 6, 7}  # 006: research-supplement annotations, 007: population roles
+        assert {r[0] for r in conn.execute("SELECT version FROM schema_migrations")} == {1, 2, 3, 4, 5, 6, 7, 8}  # 006: research-supplement annotations, 007: population roles, 008: submission source details
         assert "contributor" not in " ".join(r[1] for r in conn.execute("PRAGMA table_info(submission)"))  # no column on Submission
         assert "contributor" not in " ".join(r[1] for r in conn.execute("PRAGMA table_info(circuit_version)"))
     finally:

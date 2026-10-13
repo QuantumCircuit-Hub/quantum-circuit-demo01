@@ -40,6 +40,8 @@ from qch.models import (
     PopulationMembership,
     ResearchPopulation,
     ResearchSource,
+    SubmissionDetailSource,
+    SubmissionSourceDetail,
     SourceCommit,
     StructuralMetric,
     Submission,
@@ -564,4 +566,34 @@ class Storage(Protocol):
 
     def list_population_memberships(self, population_id: str) -> list[PopulationMembership]:
         """Ordered by source_ref."""
+        ...
+
+    # -- QCH schema v8: submitter-authored submission details --------------------
+
+    def record_submission_details(self, source: SubmissionDetailSource, details: list[SubmissionSourceDetail]) -> int:
+        """ONE transaction: inserts the source body record and every detail
+        row read from it; returns the number of detail rows inserted.
+        Idempotent by detail_source_id: if that body was already imported
+        with identical rows (import timestamps aside), returns 0 and writes
+        nothing. If any stored row differs from the incoming one, or a row is
+        missing/extra, raises ValidationError and writes nothing -- stored
+        source text is never overwritten. All-or-nothing on any failure."""
+        ...
+
+    def get_submission_detail_source(self, detail_source_id: str) -> SubmissionDetailSource | None: ...
+
+    def list_submission_detail_sources(self) -> list[SubmissionDetailSource]:
+        """Ordered by fetched_at, then detail_source_id."""
+        ...
+
+    def list_submission_source_details(
+        self, *, submission_id: str | None = None, source_submission_uuid: str | None = None, detail_source_id: str | None = None
+    ) -> list[SubmissionSourceDetail]:
+        """Filtered by whichever arguments are given; ordered by
+        source_fetched_at, detail_source_id, source_record_index."""
+        ...
+
+    def latest_submission_source_detail(self, submission_id: str) -> SubmissionSourceDetail | None:
+        """The row from the body with the greatest source_fetched_at (ties:
+        greater detail_source_id) -- the view submission_source_detail_latest."""
         ...

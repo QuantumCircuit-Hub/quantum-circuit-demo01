@@ -563,3 +563,58 @@ class PopulationMembership:
     source_ref: str  # identifier exactly as written in the source
     source_list_field: str
     member_role: str  # 'promoted' | 'curated_rejected'
+
+
+@dataclass
+class SubmissionDetailSource:
+    """QCH schema v8: one imported API body (content-addressed,
+    `detail_source_id` = body SHA-256) that submitter-authored submission
+    details were read from. `acquisition` says who fetched it: 'qch_fetch'
+    (QCH's own snapshot, also registered as `evaluation_snapshot_id`) or
+    'third_party_pinned_copy' (a hash-pinned copy published by someone else)."""
+
+    detail_source_id: str
+    source_system: str
+    source_endpoint: str
+    fetched_at: str  # UTC, 'YYYY-MM-DDTHH:MM:SSZ'
+    acquisition: str
+    acquisition_note: str
+    body_sha256: str
+    body_bytes: int
+    record_count: int
+    importer_name: str
+    importer_version: str
+    imported_at: str
+    evaluation_snapshot_id: str | None = None
+    import_stats: dict[str, Any] = field(default_factory=dict)
+
+
+@dataclass
+class SubmissionSourceDetail:
+    """QCH schema v8: what ONE source body said the SUBMITTER wrote for one
+    platform submission -- note, claimedScore, coauthors -- verbatim, plus the
+    body's own createdAt/updatedAt strings. Submitter statements: not official
+    metrics, not paper-author technique labels, not evidence of correctness.
+    `*_presence` is 'absent' | 'null' | 'empty' | 'value'. `submission_id` is
+    None when QCH has no submission with that platform UUID."""
+
+    detail_id: str
+    detail_source_id: str
+    source_system: str
+    source_submission_uuid: str
+    source_record_index: int
+    source_fetched_at: str
+    note_presence: str
+    claimed_score_presence: str
+    coauthors_presence: str
+    importer_version: str
+    imported_at: str
+    submission_id: str | None = None
+    platform_created_at_raw: str | None = None
+    platform_updated_at_raw: str | None = None
+    note: str | None = None
+    note_sha256: str | None = None
+    note_chars: int | None = None
+    claimed_score_json: str | None = None
+    claimed_score_integer: int | None = None
+    coauthors_json: str | None = None

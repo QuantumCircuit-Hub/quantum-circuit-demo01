@@ -26,6 +26,9 @@ SCRIPTS_DIR = PROJECT_ROOT / "scripts"
 # the storage layer's own public shape -- not the qch.QCH domain API).
 ALLOWED_SQLITE3_FILES = {
     QCH_DIR / "storage" / "sqlite" / "backend.py",
+    # The Version Evolution Explorer's read-only reader: same storage layer, but it opens the file through a
+    # `mode=ro` URI and never runs migrations (SQLiteStorage.open() does). The only other sqlite3 importer.
+    QCH_DIR / "storage" / "sqlite" / "readonly.py",
 }
 
 

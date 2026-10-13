@@ -126,7 +126,7 @@ def test_opening_a_schema_v1_database_applies_migration_002_non_destructively(sc
         conn = sqlite3.connect(str(schema_v1_db_path))
         applied = {row[0] for row in conn.execute("SELECT version FROM schema_migrations")}
         conn.close()
-        assert applied == {1, 2, 3, 4, 5, 6, 7}  # 2D.5 adds 004_submission_evaluation, 2D.6 adds 005_contributor_provenance, v6 adds 006_research_supplement, v7 adds 007_research_population_roles
+        assert applied == {1, 2, 3, 4, 5, 6, 7, 8}  # 2D.5 adds 004_submission_evaluation, 2D.6 adds 005_contributor_provenance, v6 adds 006_research_supplement, v7 adds 007_research_population_roles, v8 adds 008_submission_source_detail
 
         # -- new functionality works immediately after migration --
         submission = hub.submissions.create("ecdsafail", external_submission_key="ecdsafail:migrated-test")
@@ -152,7 +152,7 @@ def test_reopening_an_already_migrated_database_is_a_no_op(schema_v1_db_path):
         conn = sqlite3.connect(str(schema_v1_db_path))
         rows = conn.execute("SELECT version FROM schema_migrations ORDER BY version").fetchall()
         conn.close()
-        assert [r[0] for r in rows] == [1, 2, 3, 4, 5, 6, 7]
+        assert [r[0] for r in rows] == [1, 2, 3, 4, 5, 6, 7, 8]
     finally:
         hub2.close()
 
@@ -171,7 +171,7 @@ def test_fresh_database_applies_all_three_migrations(tmp_path):
         materialization_columns = {row[1] for row in conn.execute("PRAGMA table_info(materialization_job)")}
         conn.close()
 
-        assert applied == {1, 2, 3, 4, 5, 6, 7}  # 2D.5 adds 004_submission_evaluation, 2D.6 adds 005_contributor_provenance, v6 adds 006_research_supplement, v7 adds 007_research_population_roles
+        assert applied == {1, 2, 3, 4, 5, 6, 7, 8}  # 2D.5 adds 004_submission_evaluation, 2D.6 adds 005_contributor_provenance, v6 adds 006_research_supplement, v7 adds 007_research_population_roles, v8 adds 008_submission_source_detail
         assert {"logical_circuit", "circuit_version", "submission", "submission_source_commit", "materialization_job"} <= tables
         assert "realized_from_submission_id" in columns
         assert {"job_id", "version_id", "status", "materializer_name", "materializer_version", "environment_fingerprint", "attempt_no", "output_artifact_id"} <= materialization_columns
@@ -276,7 +276,7 @@ def test_opening_a_schema_v2_database_applies_migration_003_non_destructively(sc
         applied = {row[0] for row in conn.execute("SELECT version FROM schema_migrations")}
         tables = {row[0] for row in conn.execute("SELECT name FROM sqlite_master WHERE type='table'")}
         conn.close()
-        assert applied == {1, 2, 3, 4, 5, 6, 7}  # 2D.5 adds 004_submission_evaluation, 2D.6 adds 005_contributor_provenance, v6 adds 006_research_supplement, v7 adds 007_research_population_roles
+        assert applied == {1, 2, 3, 4, 5, 6, 7, 8}  # 2D.5 adds 004_submission_evaluation, 2D.6 adds 005_contributor_provenance, v6 adds 006_research_supplement, v7 adds 007_research_population_roles, v8 adds 008_submission_source_detail
         assert "materialization_job" in tables
 
         # -- MaterializationJob table begins empty --
@@ -319,6 +319,6 @@ def test_reopening_an_already_migrated_v2_database_is_a_no_op(schema_v2_db_path)
         conn = sqlite3.connect(str(schema_v2_db_path))
         rows = conn.execute("SELECT version FROM schema_migrations ORDER BY version").fetchall()
         conn.close()
-        assert [r[0] for r in rows] == [1, 2, 3, 4, 5, 6, 7]
+        assert [r[0] for r in rows] == [1, 2, 3, 4, 5, 6, 7, 8]
     finally:
         hub2.close()

@@ -60,11 +60,10 @@ def test_check_database_non_qch_file_is_not_ok(tmp_path):
     assert status.ok is False
 
 
-def test_check_database_real_project_db_if_present():
-    real_db = PROJECT_ROOT / "data" / "qch_ecdsa_p17.sqlite3"
-    if not real_db.exists():
-        pytest.skip("real QCH snapshot not present locally")
-    status = check_database(real_db)
+def test_check_database_real_project_db_if_present(real_store_copy):
+    # check_database() opens the store through QCH.open(), which applies pending migrations:
+    # run it on the session copy (tests/conftest.py), never on the production file.
+    status = check_database(real_store_copy)
     assert status.ok is True
 
 

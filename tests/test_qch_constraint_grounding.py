@@ -248,13 +248,10 @@ def test_occurrence_extraction_is_word_bounded():
 # == T18/T19 real-data identity facts (read-only) ========================================
 
 
-def test_t18_t19_real_identity_facts_unchanged():
+def test_t18_t19_real_identity_facts_unchanged(real_store_copy):
     from qch import QCH
 
-    db = PROJECT_ROOT / "data" / "qch_ecdsa_p17.sqlite3"
-    if not db.exists():
-        pytest.skip("real store not present")
-    with QCH.open(str(db)) as h:
+    with QCH.open(str(real_store_copy)) as h:
         assert h.contributors.resolve("Alan Li").outcome.value == "unknown"
         old, new = h.contributors.resolve("welttowelt"), h.contributors.resolve("odinfree")
         assert old.identity.contributor_identity_id == new.identity.contributor_identity_id and old.identity.current_handle == "odinfree"

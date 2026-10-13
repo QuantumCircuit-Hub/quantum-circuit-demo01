@@ -33,6 +33,8 @@ from qch.models import (
     PopulationMembership,
     ResearchPopulation,
     ResearchSource,
+    SubmissionDetailSource,
+    SubmissionSourceDetail,
     SourceCommit,
     StructuralMetric,
     Submission,
@@ -1212,6 +1214,105 @@ class SQLiteStorage:
         rows = self._conn.execute("SELECT * FROM population_membership WHERE population_id = ? ORDER BY source_ref", (population_id,)).fetchall()
         return [PopulationMembership(population_id=r["population_id"], submission_id=r["submission_id"], source_ref=r["source_ref"],
                                      source_list_field=r["source_list_field"], member_role=r["member_role"]) for r in rows]
+
+    # -- QCH schema v8: submitter-authored submission details ---------------------
+
+    _DETAIL_SOURCE_FIELDS = (
+        "detail_source_id", "source_system", "source_endpoint", "fetched_at", "acquisition", "acquisition_note", "body_sha256",
+        "body_bytes", "record_count", "evaluation_snapshot_id", "importer_name", "importer_version", "imported_at",
+    )
+    _DETAIL_FIELDS = (
+        "detail_id", "detail_source_id", "source_system", "source_submission_uuid", "submission_id", "source_record_index",
+        "source_fetched_at", "platform_created_at_raw", "platform_updated_at_raw", "note_presence", "note", "note_sha256",
+        "note_chars", "claimed_score_presence", "claimed_score_json", "claimed_score_integer", "coauthors_presence",
+        "coauthors_json", "importer_version", "imported_at",
+    )
+    _DETAIL_VOLATILE = ("imported_at", "importer_version")  # not part of what the source said
+
+    @classmethod
+    def _detail_content(cls, detail: SubmissionSourceDetail) -> tuple:
+        return tuple(getattr(detail, f) for f in cls._DETAIL_FIELDS if f not in cls._DETAIL_VOLATILE)
+
+    def record_submission_details(self, source: SubmissionDetailSource, details: list[SubmissionSourceDetail]) -> int:
+        if any(d.detail_source_id != source.detail_source_id for d in details):
+            raise ValidationError("submission details: a detail row names a different detail_source_id; nothing written")
+        stored = self.get_submission_detail_source(source.detail_source_id)
+        if stored is not None:
+            problems: list[str] = []
+            for f in ("source_system", "source_endpoint", "fetched_at", "acquisition", "body_sha256", "body_bytes", "record_count"):
+                if getattr(stored, f) != getattr(source, f):
+                    problems.append(f"submission_detail_source.{f}: stored {getattr(stored, f)!r} != incoming {getattr(source, f)!r}")
+            have = {d.detail_id: self._detail_content(d) for d in self.list_submission_source_details(detail_source_id=source.detail_source_id)}
+            want = {d.detail_id: self._detail_content(d) for d in details}
+            for detail_id in sorted(have.keys() | want.keys()):
+                if have.get(detail_id) != want.get(detail_id):
+                    problems.append(f"submission_source_detail {detail_id}: stored row differs from incoming (stored: {detail_id in have}, incoming: {detail_id in want})")
+            if problems:
+                raise ValidationError(f"submission details conflict with the stored import of body {source.detail_source_id[:12]} ({len(problems)} differences; nothing written): {problems[:3]}")
+            return 0
+        try:
+            # One explicit transaction for everything -- all-or-nothing.
+            self._conn.execute("BEGIN")
+            self._conn.execute(
+                "INSERT INTO submission_detail_source(" + ", ".join(self._DETAIL_SOURCE_FIELDS) + ", import_stats_json) VALUES ("
+                + ", ".join("?" * (len(self._DETAIL_SOURCE_FIELDS) + 1)) + ")",
+                tuple(getattr(source, f) for f in self._DETAIL_SOURCE_FIELDS) + (_dumps(source.import_stats),),
+            )
+            self._conn.executemany(
+                "INSERT INTO submission_source_detail(" + ", ".join(self._DETAIL_FIELDS) + ") VALUES (" + ", ".join("?" * len(self._DETAIL_FIELDS)) + ")",
+                [tuple(getattr(d, f) for f in self._DETAIL_FIELDS) for d in details],
+            )
+            self._conn.commit()
+        except sqlite3.IntegrityError as exc:
+            self._conn.rollback()
+            message = str(exc)
+            if "UNIQUE" in message or "PRIMARY KEY" in message:
+                raise DuplicateError(message) from exc
+            raise ValidationError(message) from exc
+        except sqlite3.Error as exc:
+            self._conn.rollback()
+            raise StorageError(str(exc)) from exc
+        return len(details)
+
+    def get_submission_detail_source(self, detail_source_id: str) -> SubmissionDetailSource | None:
+        row = self._conn.execute("SELECT * FROM submission_detail_source WHERE detail_source_id = ?", (detail_source_id,)).fetchone()
+        return _row_to_submission_detail_source(row) if row else None
+
+    def list_submission_detail_sources(self) -> list[SubmissionDetailSource]:
+        rows = self._conn.execute("SELECT * FROM submission_detail_source ORDER BY fetched_at, detail_source_id").fetchall()
+        return [_row_to_submission_detail_source(r) for r in rows]
+
+    def list_submission_source_details(
+        self, *, submission_id: str | None = None, source_submission_uuid: str | None = None, detail_source_id: str | None = None
+    ) -> list[SubmissionSourceDetail]:
+        clauses, params = [], []
+        for column, value in (("submission_id", submission_id), ("source_submission_uuid", source_submission_uuid), ("detail_source_id", detail_source_id)):
+            if value is not None:
+                clauses.append(f"{column} = ?")
+                params.append(value)
+        where = (" WHERE " + " AND ".join(clauses)) if clauses else ""
+        rows = self._conn.execute(
+            "SELECT * FROM submission_source_detail" + where + " ORDER BY source_fetched_at, detail_source_id, source_record_index", params
+        ).fetchall()
+        return [_row_to_submission_source_detail(r) for r in rows]
+
+    def latest_submission_source_detail(self, submission_id: str) -> SubmissionSourceDetail | None:
+        row = self._conn.execute("SELECT * FROM submission_source_detail_latest WHERE submission_id = ?", (submission_id,)).fetchone()
+        return _row_to_submission_source_detail(row) if row else None
+
+
+def _row_to_submission_detail_source(row: sqlite3.Row) -> SubmissionDetailSource:
+    return SubmissionDetailSource(
+        detail_source_id=row["detail_source_id"], source_system=row["source_system"], source_endpoint=row["source_endpoint"],
+        fetched_at=row["fetched_at"], acquisition=row["acquisition"], acquisition_note=row["acquisition_note"],
+        body_sha256=row["body_sha256"], body_bytes=row["body_bytes"], record_count=row["record_count"],
+        importer_name=row["importer_name"], importer_version=row["importer_version"], imported_at=row["imported_at"],
+        evaluation_snapshot_id=row["evaluation_snapshot_id"], import_stats=_loads(row["import_stats_json"]),
+    )
+
+
+def _row_to_submission_source_detail(row: sqlite3.Row) -> SubmissionSourceDetail:
+    return SubmissionSourceDetail(**{f: row[f] for f in SQLiteStorage._DETAIL_FIELDS})
 
 
 def _row_to_research_source(row: sqlite3.Row) -> ResearchSource:

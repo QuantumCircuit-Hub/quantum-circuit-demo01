@@ -177,7 +177,7 @@ def main() -> None:
     back.close()
     out["db_sha256_unchanged_during_validation"] = sha(DB) == db_before
     ok = (out["backup"]["matches_recorded_sha256"] and all(out["pinned_inputs"].values()) and out["integrity_check"] == "ok"
-          and out["foreign_key_violations"] == 0 and out["migrations"] == [1, 2, 3, 4, 5, 6, 7] and out["unchanged_all"]
+          and out["foreign_key_violations"] == 0 and out["migrations"][:7] == [1, 2, 3, 4, 5, 6, 7] and out["unchanged_all"]
           and out["legacy_name_absent"] and out["rule_text_consistency"] and out["frontier_links_candidate"]
           and out["candidate_set"]["stored_equals_qch_derivation"] and out["candidate_set"]["stored_equals_pinned_response_derivation"]
           and out["candidate_set"]["not_promoted_equals_curated_six"] and out["pareto"]["equals_curation_listed_ids"]

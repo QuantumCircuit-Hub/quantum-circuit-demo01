@@ -67,6 +67,15 @@ yet used by the Streamlit demo above.
 This is an early, evolving API — see API_REFERENCE.md's "Current API
 Stability" section before depending on it in a long-lived project.
 
+## Version Evolution Explorer
+
+The **Version Evolution Explorer** page of the Streamlit app searches the QCH
+database for a circuit version, draws its immediate neighbors in the evolution
+graph, lets you expand them interactively, and shows version and edge details
+(official metrics, submitter statements and paper-author technique labels as
+separate evidence). It opens the database read-only. See
+[`docs/QCH_VERSION_EVOLUTION_EXPLORER.md`](docs/QCH_VERSION_EVOLUTION_EXPLORER.md).
+
 ## Layout
 
 - `data/raw` — unmodified input data (e.g. downloaded MQT Bench circuits)
