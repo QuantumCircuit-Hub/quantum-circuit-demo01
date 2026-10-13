@@ -476,3 +476,145 @@ class ContributorImport:
     importer_version: str
     imported_at: str
     import_stats: dict[str, Any] = field(default_factory=dict)
+
+
+# -- QCH schema v6: research-supplement annotations -------------------------------------
+
+
+@dataclass
+class ResearchSource:
+    """One pinned source file of an external research supplement: repository,
+    full commit, path inside the repository and the SHA-256 of the exact bytes
+    imported. Every research annotation row points at one of these."""
+
+    source_id: str
+    source_kind: str  # 'technique_census' | 'population_curation'
+    repository_url: str
+    repository_commit: str
+    file_path: str
+    sha256: str
+    license_notice: str
+    description: str
+    retrieved_at: str
+    importer_name: str
+    importer_version: str
+    imported_at: str
+    auxiliary: dict[str, Any] = field(default_factory=dict)
+
+
+@dataclass
+class TechniqueLabel:
+    """An author-assigned PRIMARY optimization-family label for one commit
+    (e.g. ECDSA.Fail Supplemental Note C), linked to the existing
+    CircuitVersion and, where one exists, its incoming next_promoted_commit
+    edge. It is an interpretive classification, not proof that the technique
+    caused the whole score change. `source_score` / `source_frontier_delta`
+    are copied verbatim from the source (None for unscored rows; never
+    computed)."""
+
+    label_id: str
+    source_id: str
+    version_id: str
+    source_row_number: int
+    source_commit_ref: str
+    family: str
+    classification_status: str
+    source_scored: bool
+    label_role: str = "primary"
+    incoming_edge_id: str | None = None
+    resolved_commit_sha: str | None = None
+    change_type: str | None = None
+    source_contestant: str | None = None
+    source_date: str | None = None
+    source_score: int | None = None
+    source_frontier_delta: int | None = None
+
+
+@dataclass
+class ResearchPopulation:
+    """A named, source-bound set of Submissions (member_scope 'submission':
+    members need not have a CircuitVersion). An editorial selection for one
+    source and cutoff -- not a general admission rule and not platform
+    verification evidence; `semantics` states this for every consumer.
+
+    Schema v7: `population_role` separates a computation's input
+    ('candidate_set') from the Pareto points a source publishes for it
+    ('published_pareto_frontier', `derived_from_population_id` -> its
+    candidate set). `rule_source_field` names the source field `rule_text`
+    quotes verbatim (None: rule_text is a QCH statement of the basis)."""
+
+    population_id: str
+    name: str
+    source_id: str
+    semantics: str
+    rule_text: str
+    member_scope: str = "submission"
+    cutoff_at: str | None = None
+    population_role: str | None = None
+    derived_from_population_id: str | None = None
+    rule_source_field: str | None = None
+    provenance: dict[str, Any] = field(default_factory=dict)
+
+
+@dataclass
+class PopulationMembership:
+    population_id: str
+    submission_id: str
+    source_ref: str  # identifier exactly as written in the source
+    source_list_field: str
+    member_role: str  # 'promoted' | 'curated_rejected'
+
+
+@dataclass
+class SubmissionDetailSource:
+    """QCH schema v8: one imported API body (content-addressed,
+    `detail_source_id` = body SHA-256) that submitter-authored submission
+    details were read from. `acquisition` says who fetched it: 'qch_fetch'
+    (QCH's own snapshot, also registered as `evaluation_snapshot_id`) or
+    'third_party_pinned_copy' (a hash-pinned copy published by someone else)."""
+
+    detail_source_id: str
+    source_system: str
+    source_endpoint: str
+    fetched_at: str  # UTC, 'YYYY-MM-DDTHH:MM:SSZ'
+    acquisition: str
+    acquisition_note: str
+    body_sha256: str
+    body_bytes: int
+    record_count: int
+    importer_name: str
+    importer_version: str
+    imported_at: str
+    evaluation_snapshot_id: str | None = None
+    import_stats: dict[str, Any] = field(default_factory=dict)
+
+
+@dataclass
+class SubmissionSourceDetail:
+    """QCH schema v8: what ONE source body said the SUBMITTER wrote for one
+    platform submission -- note, claimedScore, coauthors -- verbatim, plus the
+    body's own createdAt/updatedAt strings. Submitter statements: not official
+    metrics, not paper-author technique labels, not evidence of correctness.
+    `*_presence` is 'absent' | 'null' | 'empty' | 'value'. `submission_id` is
+    None when QCH has no submission with that platform UUID."""
+
+    detail_id: str
+    detail_source_id: str
+    source_system: str
+    source_submission_uuid: str
+    source_record_index: int
+    source_fetched_at: str
+    note_presence: str
+    claimed_score_presence: str
+    coauthors_presence: str
+    importer_version: str
+    imported_at: str
+    submission_id: str | None = None
+    platform_created_at_raw: str | None = None
+    platform_updated_at_raw: str | None = None
+    note: str | None = None
+    note_sha256: str | None = None
+    note_chars: int | None = None
+    claimed_score_json: str | None = None
+    claimed_score_integer: int | None = None
+    coauthors_json: str | None = None

@@ -48,6 +48,34 @@ its own adapter rather than the QASM-based circuit model below. See
 data flow, the `QCH_ECDSA_DATASET_ROOT` configuration variable, and how
 the demo stays lightweight and portable for deployment.
 
+## QCH Python database API (early access)
+
+Alongside the Streamlit demo, this repository also contains the start
+of a general-purpose, storage-independent Quantum Circuit Hub database
+and Python API (`src/qch/`) — not specific to any one dataset, and not
+yet used by the Streamlit demo above.
+
+- [`docs/GETTING_STARTED.md`](docs/GETTING_STARTED.md) — task-by-task
+  guide: opening a store, importing a QASM file, importing ECDSA.Fail
+  data, and querying everything back out.
+- [`docs/API_REFERENCE.md`](docs/API_REFERENCE.md) — every current
+  public method, dataclass, and exception.
+- [`docs/DB1_ARCHITECTURE.md`](docs/DB1_ARCHITECTURE.md) — the design
+  rationale (why `CircuitVersion` identity is modeled the way it is,
+  idempotency, verification semantics, schema versioning).
+
+This is an early, evolving API — see API_REFERENCE.md's "Current API
+Stability" section before depending on it in a long-lived project.
+
+## Version Evolution Explorer
+
+The **Version Evolution Explorer** page of the Streamlit app searches the QCH
+database for a circuit version, draws its immediate neighbors in the evolution
+graph, lets you expand them interactively, and shows version and edge details
+(official metrics, submitter statements and paper-author technique labels as
+separate evidence). It opens the database read-only. See
+[`docs/QCH_VERSION_EVOLUTION_EXPLORER.md`](docs/QCH_VERSION_EVOLUTION_EXPLORER.md).
+
 ## Layout
 
 - `data/raw` — unmodified input data (e.g. downloaded MQT Bench circuits)
@@ -56,5 +84,31 @@ the demo stays lightweight and portable for deployment.
   manifest for portable/offline demo use (see docs/ECDSA_INTEGRATION.md)
 - `src` — application and library source code
 - `tests` — automated tests
-- `scripts` — one-off or utility scripts
-- `docs` — design notes and documentation
+- `scripts` — import, query and evaluation scripts (backend-agnostic)
+- `audits` — read-only, deliberately SQLite-specific data audits
+- `examples` — small runnable API examples
+- `docs` — design notes and documentation (including
+  `docs/qch-core-conceptual-schema-v0.1.md` from the original
+  QuantumCircuit-Hub/quantum-circuit-hub repository)
+
+## Vision
+
+QCH aims to become an open infrastructure and community for quantum circuit
+data management and research: circuit storage and management, metadata and
+provenance, versioning and evolution, exact and approximate search,
+equivalence and similarity, optimization and rewriting, benchmark collection
+and evaluation, and reproducible quantum computing research. Planned
+components: QCH-Data, QCH-Core, QCH-Search, QCH-Opt and QCH-Bench (see
+`docs/qch-core-conceptual-schema-v0.1.md`).
+
+This repository combines the history of QuantumCircuit-Hub/quantum-circuit-demo01
+(prototype, database, query system, demo app, tests) with the original
+QuantumCircuit-Hub/quantum-circuit-hub project skeleton; see
+`docs/REPOSITORY_CONSOLIDATION.md`.
+
+## License
+
+The code is licensed under the Apache License 2.0 (see `LICENSE`, inherited from the
+original quantum-circuit-hub repository). Third-party data bundled or derived
+here (for example ECDSA.Fail submission data and MQT Bench circuits) keeps its
+own terms; see `docs/REPOSITORY_CONSOLIDATION.md`.

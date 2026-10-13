@@ -8,6 +8,8 @@ from qch.services.ingestion import IngestionService
 from qch.services.materializations import MaterializationsService
 from qch.services.metrics import MetricsService
 from qch.services.provenance import ProvenanceService
+from qch.services.research import ResearchSupplementsService
+from qch.services.submission_details import SubmissionDetailsService
 from qch.services.structures import StructuralAnalysisService
 from qch.services.submissions import SubmissionsService
 from qch.services.tags import TagsService
@@ -25,6 +27,8 @@ __all__ = [
     "MaterializationsService",
     "MetricsService",
     "ProvenanceService",
+    "ResearchSupplementsService",
+    "SubmissionDetailsService",
     "StructuralAnalysisService",
     "SubmissionsService",
     "TagsService",

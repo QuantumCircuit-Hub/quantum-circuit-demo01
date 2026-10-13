@@ -1,4 +1,11 @@
 [client]
-# The sidebar lists only the two main pages (src/qch_navigation.py);
+# The public sidebar is rendered by src/qch_navigation.py.
 # pages/circuit_detail.py stays routable but unlisted.
 showSidebarNavigation = false
+toolbarMode = "viewer"
+
+[server]
+headless = true
+
+[browser]
+gatherUsageStats = false

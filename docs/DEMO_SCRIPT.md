@@ -1,0 +1,124 @@
+# Quantum Circuit Hub (QCH) — 2-Minute Demo Script
+
+*A speaking script for introducing the QCH Streamlit demo. Read it as a guide, not a
+transcript — pause wherever you're clicking through the UI.*
+
+---
+
+## Opening (15 seconds)
+
+"I want to show you something we call Quantum Circuit Hub, or QCH.
+
+Here's the core idea in one sentence: **QCH is a database for the evolution of
+quantum circuits** — not another compiler, not another visualizer. Compilers
+transform circuits. QCH manages what happens *before*, *during*, and *after*
+those transformations — as structured, queryable data."
+
+---
+
+## Why this matters (20 seconds)
+
+"In a real quantum software pipeline, one logical circuit doesn't stay one
+circuit. It gets optimized, transpiled, mapped onto specific hardware — and
+each step produces a new version. Today, most tools throw that history away:
+you're left with a final QASM file and no memory of how it got there, what
+was tried, or what changed. QCH keeps all of that as first-class data."
+
+---
+
+## Walkthrough: pick a circuit (10 seconds)
+
+"Let me show you live. At the top, I pick which logical circuit to explore —
+these are real circuits, either hand-written or pulled straight from MQT
+Bench, an actual quantum benchmark suite. Let's use GHZ-5."
+
+*(select "GHZ-5 (MQT Bench circuit, 5 qubits)" from the dropdown)*
+
+---
+
+## The Evolution Graph (30 seconds)
+
+"This is the centerpiece: the Circuit Evolution Graph. One box per version,
+laid out left to right as it evolves.
+
+Here's `v1`, the original circuit. From there, it branches into three
+*independent* optimization attempts — `v2`, `v3`, `v4` — each one a different
+optimization level, not a chain. That distinction matters: these are
+siblings, alternative strategies applied to the same original circuit, not
+a sequence.
+
+Then `v4` branches again into two hardware-mapped versions, `v5` and `v6` —
+one mapped onto a linear qubit layout, one onto a ring. Every node shows its
+stage and its gate-count and depth change relative to its parent. Every edge
+is clickable-context: hover it and you see exactly what tool and parameters
+produced it — for example, 'Qiskit transpile, optimization_level=3.'
+
+And if I click any version box —"
+
+*(click a node)*
+
+"— it opens the full picture in a new tab: the actual circuit diagram, the
+raw QASM source, and a download button. Nothing here is a screenshot or a
+mockup. It's live data."
+
+---
+
+## Inspect a version (20 seconds)
+
+*(back on the main page, use the "Inspect Circuit Version" selector)*
+
+"Below the graph, I can inspect any single version in more depth — its
+identity and provenance, key metrics as clean number cards, and then the
+full representation: gate histogram, circuit diagram, and QASM, without
+that detail crowding out the headline numbers."
+
+---
+
+## Compare Versions — the real finding (30 seconds)
+
+"This next part is the most interesting result we've found so far.
+
+I'll compare two versions and look at gate count, depth, two-qubit gates,
+and SWAP count — all with clear deltas.
+
+For some circuits, alternative optimization levels or hardware topologies
+produce genuinely different results. Try the Multiplier-8 example: version
+`v2` versus `v3` differ by over a hundred gates, and switching between a
+linear and a ring hardware layout changes the SWAP count outright.
+
+But we also deliberately kept an example where the *opposite* happens —
+QFT-entangled-5, where several versions look identical on every coarse
+metric: same gate count, same depth. That's exactly the trap. QCH goes one
+level deeper and computes a structural fingerprint for every version — and
+it reveals that one of those 'identical' versions is actually structurally
+different underneath, because it was mapped onto a different physical
+qubit layout. A system that only stored gate counts would never have
+caught that."
+
+---
+
+## Closing (15 seconds)
+
+"That's QCH: one logical circuit, a full graph of how it evolved, real
+provenance for every step, and metrics that go deep enough to catch what
+coarse numbers alone would miss. The long-term vision is a searchable
+knowledge base of quantum circuit evolution — this demo is the first
+working piece of that."
+
+---
+
+## Backup talking points (if you get questions)
+
+- **"Isn't this just version control for files?"** — Git-style content
+  addressing treats identical content as identical identity. QCH
+  deliberately keeps *identity* and *structural content* separate, because
+  we've shown that structurally identical circuits can still be
+  meaningfully different derivation events worth tracking on their own.
+- **"Do you compute semantic/unitary equivalence?"** — Not yet, and we say
+  so explicitly in the UI ("Not computed") rather than guessing. It's a
+  named, reserved extension point — computing it efficiently at scale is
+  one of our open research questions.
+- **"Where does the data come from?"** — A mix of a hand-authored QFT
+  example and four circuits generated by MQT Bench, a real academic quantum
+  benchmark suite, transpiled with Qiskit using a fixed random seed so every
+  result here is exactly reproducible.

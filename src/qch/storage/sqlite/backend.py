@@ -30,11 +30,17 @@ from qch.models import (
     IngestionJob,
     LogicalCircuit,
     MaterializationJob,
+    PopulationMembership,
+    ResearchPopulation,
+    ResearchSource,
+    SubmissionDetailSource,
+    SubmissionSourceDetail,
     SourceCommit,
     StructuralMetric,
     Submission,
     SubmissionEvaluation,
     SubmissionSourceCommit,
+    TechniqueLabel,
     TransformationEdge,
     VerificationResult,
 )
@@ -1007,6 +1013,334 @@ class SQLiteStorage:
         for per_submission in by_snapshot.values():  # later snapshots replace earlier ones, per submission
             latest.update(per_submission)
         return latest
+
+    # -- QCH schema v6: research-supplement annotations ------------------------
+
+    _LABEL_FIELDS = (
+        "label_id", "source_id", "version_id", "incoming_edge_id", "source_row_number", "source_commit_ref", "resolved_commit_sha",
+        "label_role", "family", "change_type", "classification_status", "source_contestant", "source_date", "source_scored",
+        "source_score", "source_frontier_delta",
+    )
+
+    @staticmethod
+    def _label_tuple(label: TechniqueLabel) -> tuple:
+        return tuple(int(label.source_scored) if f == "source_scored" else getattr(label, f) for f in SQLiteStorage._LABEL_FIELDS)
+
+    def _research_conflicts(self, source, labels, population, memberships) -> list[str]:
+        """Differences between what is stored for `source.source_id` and the
+        incoming rows; [] means byte-for-byte the same import."""
+        problems: list[str] = []
+        stored = self.get_research_source(source.source_id)
+        for f in ("source_kind", "repository_url", "repository_commit", "file_path", "sha256"):
+            if getattr(stored, f) != getattr(source, f):
+                problems.append(f"research_source.{f}: stored {getattr(stored, f)!r} != incoming {getattr(source, f)!r}")
+        have = {r[0]: tuple(r) for r in self._conn.execute(
+            "SELECT " + ", ".join(self._LABEL_FIELDS) + " FROM version_technique_label WHERE source_id = ?", (source.source_id,))}
+        want = {lab.label_id: self._label_tuple(lab) for lab in labels}
+        for lid in sorted(have.keys() | want.keys()):
+            if have.get(lid) != want.get(lid):
+                problems.append(f"version_technique_label {lid}: stored {have.get(lid)} != incoming {want.get(lid)}")
+        if population is not None:
+            existing = self.get_research_population(population.name)
+            if existing is None or existing != population:
+                problems.append(f"research_population {population.name!r}: stored {existing} != incoming {population}")
+            have_m = {(m.submission_id, m.source_ref, m.source_list_field, m.member_role) for m in self.list_population_memberships(population.population_id)}
+            want_m = {(m.submission_id, m.source_ref, m.source_list_field, m.member_role) for m in memberships}
+            if have_m != want_m:
+                problems.append(f"population_membership {population.name!r}: stored-only {sorted(have_m - want_m)}, incoming-only {sorted(want_m - have_m)}")
+        return problems
+
+    def record_research_import(
+        self,
+        source: ResearchSource,
+        labels: list[TechniqueLabel],
+        population: ResearchPopulation | None,
+        memberships: list[PopulationMembership],
+    ) -> bool:
+        if self.get_research_source(source.source_id) is not None:
+            problems = self._research_conflicts(source, labels, population, memberships)
+            if problems:
+                raise ValidationError(f"research import conflicts with the stored import of {source.file_path} ({len(problems)} differences; nothing written): {problems[:3]}")
+            return False
+        if population is not None:
+            other = self.get_research_population(population.name)
+            if other is not None:
+                raise ValidationError(f"research_population {population.name!r} already exists for source {other.source_id}; nothing written")
+        try:
+            # One explicit transaction for everything -- all-or-nothing.
+            self._conn.execute("BEGIN")
+            self._insert_research_source(source)
+            self._conn.executemany(
+                "INSERT INTO version_technique_label(" + ", ".join(self._LABEL_FIELDS) + ") VALUES (" + ", ".join("?" * len(self._LABEL_FIELDS)) + ")",
+                [self._label_tuple(lab) for lab in labels],
+            )
+            if population is not None:
+                self._insert_research_population(population, memberships)
+            self._conn.commit()
+        except sqlite3.IntegrityError as exc:
+            self._conn.rollback()
+            message = str(exc)
+            if "UNIQUE" in message or "PRIMARY KEY" in message:
+                raise DuplicateError(message) from exc
+            raise ValidationError(message) from exc
+        except sqlite3.Error as exc:
+            self._conn.rollback()
+            raise StorageError(str(exc)) from exc
+        return True
+
+    _POPULATION_FIELDS = (
+        "population_id", "name", "source_id", "member_scope", "semantics", "rule_text", "cutoff_at", "population_role",
+        "derived_from_population_id", "rule_source_field",
+    )
+
+    def _insert_research_source(self, source: ResearchSource) -> None:
+        self._conn.execute(
+            "INSERT INTO research_source(source_id, source_kind, repository_url, repository_commit, file_path, sha256, auxiliary_json,"
+            " license_notice, description, retrieved_at, importer_name, importer_version, imported_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (
+                source.source_id, source.source_kind, source.repository_url, source.repository_commit, source.file_path, source.sha256,
+                _dumps(source.auxiliary), source.license_notice, source.description, source.retrieved_at, source.importer_name,
+                source.importer_version, source.imported_at,
+            ),
+        )
+
+    def _insert_research_population(self, population: ResearchPopulation, memberships: list[PopulationMembership]) -> None:
+        self._conn.execute(
+            "INSERT INTO research_population(" + ", ".join(self._POPULATION_FIELDS) + ", provenance_json) VALUES ("
+            + ", ".join("?" * (len(self._POPULATION_FIELDS) + 1)) + ")",
+            tuple(getattr(population, f) for f in self._POPULATION_FIELDS) + (_dumps(population.provenance),),
+        )
+        self._conn.executemany(
+            "INSERT INTO population_membership(population_id, submission_id, source_ref, source_list_field, member_role) VALUES (?, ?, ?, ?, ?)",
+            [(m.population_id, m.submission_id, m.source_ref, m.source_list_field, m.member_role) for m in memberships],
+        )
+
+    @staticmethod
+    def _member_set(memberships: list[PopulationMembership]) -> set[tuple]:
+        return {(m.submission_id, m.source_ref, m.source_list_field, m.member_role) for m in memberships}
+
+    def record_research_populations(
+        self,
+        source: ResearchSource,
+        entries: list[tuple[ResearchPopulation, list[PopulationMembership]]],
+        renames: dict[str, str] | None = None,
+    ) -> bool:
+        renames = renames or {}
+        problems: list[str] = []
+        stored_source = self.get_research_source(source.source_id)
+        if stored_source is not None:
+            for f in ("source_kind", "repository_url", "repository_commit", "file_path", "sha256"):
+                if getattr(stored_source, f) != getattr(source, f):
+                    problems.append(f"research_source.{f}: stored {getattr(stored_source, f)!r} != incoming {getattr(source, f)!r}")
+        inserts: set[str] = set()
+        corrections: set[str] = set()
+        for population, memberships in entries:
+            if population.source_id != source.source_id or any(m.population_id != population.population_id for m in memberships):
+                problems.append(f"research_population {population.name!r}: source or membership population_id does not match")
+                continue
+            stored = self.get_research_population_by_id(population.population_id)
+            by_name = self.get_research_population(population.name)
+            if by_name is not None and by_name.population_id != population.population_id:
+                problems.append(f"research_population name {population.name!r} is already used by population {by_name.population_id}")
+                continue
+            if stored is None:
+                inserts.add(population.population_id)
+                continue
+            if self._member_set(self.list_population_memberships(population.population_id)) != self._member_set(memberships):
+                problems.append(f"population_membership {stored.name!r}: stored member set differs from incoming; membership is never rewritten")
+                continue
+            if stored == population:
+                continue
+            if stored.source_id == population.source_id and stored.name in (population.name, renames.get(population.population_id)):
+                corrections.add(population.population_id)
+            else:
+                problems.append(f"research_population {population.population_id}: stored {stored} conflicts with incoming {population}")
+        if problems:
+            raise ValidationError(f"research population import conflicts with the stored rows ({len(problems)}; nothing written): {problems[:3]}")
+        if stored_source is not None and not inserts and not corrections:
+            return False
+        try:
+            # One explicit transaction for everything -- all-or-nothing.
+            self._conn.execute("BEGIN")
+            if stored_source is None:
+                self._insert_research_source(source)
+            for population, memberships in entries:  # list order: a candidate set before the frontier derived from it
+                if population.population_id in corrections:
+                    self._conn.execute(
+                        "UPDATE research_population SET " + ", ".join(f"{f} = ?" for f in self._POPULATION_FIELDS[1:])
+                        + ", provenance_json = ? WHERE population_id = ?",
+                        tuple(getattr(population, f) for f in self._POPULATION_FIELDS[1:]) + (_dumps(population.provenance), population.population_id),
+                    )
+                elif population.population_id in inserts:
+                    self._insert_research_population(population, memberships)
+            self._conn.commit()
+        except sqlite3.IntegrityError as exc:
+            self._conn.rollback()
+            message = str(exc)
+            if "UNIQUE" in message or "PRIMARY KEY" in message:
+                raise DuplicateError(message) from exc
+            raise ValidationError(message) from exc
+        except sqlite3.Error as exc:
+            self._conn.rollback()
+            raise StorageError(str(exc)) from exc
+        return True
+
+    def get_research_source(self, source_id: str) -> ResearchSource | None:
+        row = self._conn.execute("SELECT * FROM research_source WHERE source_id = ?", (source_id,)).fetchone()
+        return _row_to_research_source(row) if row else None
+
+    def list_research_sources(self) -> list[ResearchSource]:
+        return [_row_to_research_source(r) for r in self._conn.execute("SELECT * FROM research_source ORDER BY source_kind, file_path").fetchall()]
+
+    def list_technique_labels(self, source_id: str | None = None) -> list[TechniqueLabel]:
+        if source_id is None:
+            rows = self._conn.execute("SELECT * FROM version_technique_label ORDER BY source_id, source_row_number").fetchall()
+        else:
+            rows = self._conn.execute("SELECT * FROM version_technique_label WHERE source_id = ? ORDER BY source_row_number", (source_id,)).fetchall()
+        return [_row_to_technique_label(r) for r in rows]
+
+    def get_research_population(self, name: str) -> ResearchPopulation | None:
+        row = self._conn.execute("SELECT * FROM research_population WHERE name = ?", (name,)).fetchone()
+        return _row_to_research_population(row) if row else None
+
+    def get_research_population_by_id(self, population_id: str) -> ResearchPopulation | None:
+        row = self._conn.execute("SELECT * FROM research_population WHERE population_id = ?", (population_id,)).fetchone()
+        return _row_to_research_population(row) if row else None
+
+    def list_research_populations(self) -> list[ResearchPopulation]:
+        return [_row_to_research_population(r) for r in self._conn.execute("SELECT * FROM research_population ORDER BY name").fetchall()]
+
+    def list_population_memberships(self, population_id: str) -> list[PopulationMembership]:
+        rows = self._conn.execute("SELECT * FROM population_membership WHERE population_id = ? ORDER BY source_ref", (population_id,)).fetchall()
+        return [PopulationMembership(population_id=r["population_id"], submission_id=r["submission_id"], source_ref=r["source_ref"],
+                                     source_list_field=r["source_list_field"], member_role=r["member_role"]) for r in rows]
+
+    # -- QCH schema v8: submitter-authored submission details ---------------------
+
+    _DETAIL_SOURCE_FIELDS = (
+        "detail_source_id", "source_system", "source_endpoint", "fetched_at", "acquisition", "acquisition_note", "body_sha256",
+        "body_bytes", "record_count", "evaluation_snapshot_id", "importer_name", "importer_version", "imported_at",
+    )
+    _DETAIL_FIELDS = (
+        "detail_id", "detail_source_id", "source_system", "source_submission_uuid", "submission_id", "source_record_index",
+        "source_fetched_at", "platform_created_at_raw", "platform_updated_at_raw", "note_presence", "note", "note_sha256",
+        "note_chars", "claimed_score_presence", "claimed_score_json", "claimed_score_integer", "coauthors_presence",
+        "coauthors_json", "importer_version", "imported_at",
+    )
+    _DETAIL_VOLATILE = ("imported_at", "importer_version")  # not part of what the source said
+
+    @classmethod
+    def _detail_content(cls, detail: SubmissionSourceDetail) -> tuple:
+        return tuple(getattr(detail, f) for f in cls._DETAIL_FIELDS if f not in cls._DETAIL_VOLATILE)
+
+    def record_submission_details(self, source: SubmissionDetailSource, details: list[SubmissionSourceDetail]) -> int:
+        if any(d.detail_source_id != source.detail_source_id for d in details):
+            raise ValidationError("submission details: a detail row names a different detail_source_id; nothing written")
+        stored = self.get_submission_detail_source(source.detail_source_id)
+        if stored is not None:
+            problems: list[str] = []
+            for f in ("source_system", "source_endpoint", "fetched_at", "acquisition", "body_sha256", "body_bytes", "record_count"):
+                if getattr(stored, f) != getattr(source, f):
+                    problems.append(f"submission_detail_source.{f}: stored {getattr(stored, f)!r} != incoming {getattr(source, f)!r}")
+            have = {d.detail_id: self._detail_content(d) for d in self.list_submission_source_details(detail_source_id=source.detail_source_id)}
+            want = {d.detail_id: self._detail_content(d) for d in details}
+            for detail_id in sorted(have.keys() | want.keys()):
+                if have.get(detail_id) != want.get(detail_id):
+                    problems.append(f"submission_source_detail {detail_id}: stored row differs from incoming (stored: {detail_id in have}, incoming: {detail_id in want})")
+            if problems:
+                raise ValidationError(f"submission details conflict with the stored import of body {source.detail_source_id[:12]} ({len(problems)} differences; nothing written): {problems[:3]}")
+            return 0
+        try:
+            # One explicit transaction for everything -- all-or-nothing.
+            self._conn.execute("BEGIN")
+            self._conn.execute(
+                "INSERT INTO submission_detail_source(" + ", ".join(self._DETAIL_SOURCE_FIELDS) + ", import_stats_json) VALUES ("
+                + ", ".join("?" * (len(self._DETAIL_SOURCE_FIELDS) + 1)) + ")",
+                tuple(getattr(source, f) for f in self._DETAIL_SOURCE_FIELDS) + (_dumps(source.import_stats),),
+            )
+            self._conn.executemany(
+                "INSERT INTO submission_source_detail(" + ", ".join(self._DETAIL_FIELDS) + ") VALUES (" + ", ".join("?" * len(self._DETAIL_FIELDS)) + ")",
+                [tuple(getattr(d, f) for f in self._DETAIL_FIELDS) for d in details],
+            )
+            self._conn.commit()
+        except sqlite3.IntegrityError as exc:
+            self._conn.rollback()
+            message = str(exc)
+            if "UNIQUE" in message or "PRIMARY KEY" in message:
+                raise DuplicateError(message) from exc
+            raise ValidationError(message) from exc
+        except sqlite3.Error as exc:
+            self._conn.rollback()
+            raise StorageError(str(exc)) from exc
+        return len(details)
+
+    def get_submission_detail_source(self, detail_source_id: str) -> SubmissionDetailSource | None:
+        row = self._conn.execute("SELECT * FROM submission_detail_source WHERE detail_source_id = ?", (detail_source_id,)).fetchone()
+        return _row_to_submission_detail_source(row) if row else None
+
+    def list_submission_detail_sources(self) -> list[SubmissionDetailSource]:
+        rows = self._conn.execute("SELECT * FROM submission_detail_source ORDER BY fetched_at, detail_source_id").fetchall()
+        return [_row_to_submission_detail_source(r) for r in rows]
+
+    def list_submission_source_details(
+        self, *, submission_id: str | None = None, source_submission_uuid: str | None = None, detail_source_id: str | None = None
+    ) -> list[SubmissionSourceDetail]:
+        clauses, params = [], []
+        for column, value in (("submission_id", submission_id), ("source_submission_uuid", source_submission_uuid), ("detail_source_id", detail_source_id)):
+            if value is not None:
+                clauses.append(f"{column} = ?")
+                params.append(value)
+        where = (" WHERE " + " AND ".join(clauses)) if clauses else ""
+        rows = self._conn.execute(
+            "SELECT * FROM submission_source_detail" + where + " ORDER BY source_fetched_at, detail_source_id, source_record_index", params
+        ).fetchall()
+        return [_row_to_submission_source_detail(r) for r in rows]
+
+    def latest_submission_source_detail(self, submission_id: str) -> SubmissionSourceDetail | None:
+        row = self._conn.execute("SELECT * FROM submission_source_detail_latest WHERE submission_id = ?", (submission_id,)).fetchone()
+        return _row_to_submission_source_detail(row) if row else None
+
+
+def _row_to_submission_detail_source(row: sqlite3.Row) -> SubmissionDetailSource:
+    return SubmissionDetailSource(
+        detail_source_id=row["detail_source_id"], source_system=row["source_system"], source_endpoint=row["source_endpoint"],
+        fetched_at=row["fetched_at"], acquisition=row["acquisition"], acquisition_note=row["acquisition_note"],
+        body_sha256=row["body_sha256"], body_bytes=row["body_bytes"], record_count=row["record_count"],
+        importer_name=row["importer_name"], importer_version=row["importer_version"], imported_at=row["imported_at"],
+        evaluation_snapshot_id=row["evaluation_snapshot_id"], import_stats=_loads(row["import_stats_json"]),
+    )
+
+
+def _row_to_submission_source_detail(row: sqlite3.Row) -> SubmissionSourceDetail:
+    return SubmissionSourceDetail(**{f: row[f] for f in SQLiteStorage._DETAIL_FIELDS})
+
+
+def _row_to_research_source(row: sqlite3.Row) -> ResearchSource:
+    return ResearchSource(
+        source_id=row["source_id"], source_kind=row["source_kind"], repository_url=row["repository_url"], repository_commit=row["repository_commit"],
+        file_path=row["file_path"], sha256=row["sha256"], license_notice=row["license_notice"], description=row["description"],
+        retrieved_at=row["retrieved_at"], importer_name=row["importer_name"], importer_version=row["importer_version"],
+        imported_at=row["imported_at"], auxiliary=_loads(row["auxiliary_json"]),
+    )
+
+
+def _row_to_research_population(row: sqlite3.Row) -> ResearchPopulation:
+    return ResearchPopulation(
+        population_id=row["population_id"], name=row["name"], source_id=row["source_id"], semantics=row["semantics"], rule_text=row["rule_text"],
+        member_scope=row["member_scope"], cutoff_at=row["cutoff_at"], population_role=row["population_role"],
+        derived_from_population_id=row["derived_from_population_id"], rule_source_field=row["rule_source_field"],
+        provenance=_loads(row["provenance_json"]),
+    )
+
+
+def _row_to_technique_label(row: sqlite3.Row) -> TechniqueLabel:
+    return TechniqueLabel(
+        label_id=row["label_id"], source_id=row["source_id"], version_id=row["version_id"], source_row_number=row["source_row_number"],
+        source_commit_ref=row["source_commit_ref"], family=row["family"], classification_status=row["classification_status"],
+        source_scored=bool(row["source_scored"]), label_role=row["label_role"], incoming_edge_id=row["incoming_edge_id"],
+        resolved_commit_sha=row["resolved_commit_sha"], change_type=row["change_type"], source_contestant=row["source_contestant"],
+        source_date=row["source_date"], source_score=row["source_score"], source_frontier_delta=row["source_frontier_delta"],
+    )
 
 # ---------------------------------------------------------------------
 # Row -> dataclass mapping (private; nothing above this layer ever sees

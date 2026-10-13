@@ -1,0 +1,7 @@
+# Byte-exact files: their SHA-256 is frozen in docs/qch_nl_benchmark_v0.1_manifest.json,
+# so they must keep LF endings on every platform (core.autocrlf would alter them).
+src/qch/nl/benchmark_cases.json text eol=lf
+src/qch/nl/fewshot_examples_v0.1.json text eol=lf
+
+# Binary stores: never diff or convert.
+*.sqlite3 binary

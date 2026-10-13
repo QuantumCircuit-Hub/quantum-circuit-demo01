@@ -6,6 +6,12 @@
 #
 # Install with: pip install -r requirements-dev.txt
 
+# DB-3 Phase A7: optional dependency of qch.canonical.ecdsafail_ops
+# only (ECDSAOpsStructuralParser), for reading the zstd-framed
+# "QECCOPSZ" ops.bin format -- see that module's own docstring. Nothing
+# else in qch imports it; the rest of the package works without it.
+zstandard==0.25.0
+
 # Phase 1: minimal dependencies to parse OpenQASM 2 circuits, compute
 # basic metrics, and run tests. Pinned to exact installed versions.
 qiskit==2.5.2

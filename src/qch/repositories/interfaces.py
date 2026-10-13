@@ -37,11 +37,17 @@ from qch.models import (
     IngestionJob,
     LogicalCircuit,
     MaterializationJob,
+    PopulationMembership,
+    ResearchPopulation,
+    ResearchSource,
+    SubmissionDetailSource,
+    SubmissionSourceDetail,
     SourceCommit,
     StructuralMetric,
     Submission,
     SubmissionEvaluation,
     SubmissionSourceCommit,
+    TechniqueLabel,
     TransformationEdge,
     VerificationResult,
 )
@@ -500,4 +506,94 @@ class Storage(Protocol):
     def list_latest_contributions(self) -> dict[str, list[Contribution]]:
         """submission_id -> its contributions from the most recently
         fetched contributor-imported snapshot that contains it."""
+        ...
+
+    # -- QCH schema v6: research-supplement annotations ------------------------
+
+    def record_research_import(
+        self,
+        source: ResearchSource,
+        labels: list[TechniqueLabel],
+        population: ResearchPopulation | None,
+        memberships: list[PopulationMembership],
+    ) -> bool:
+        """ONE transaction: inserts the source record and every label,
+        population and membership row derived from it. Idempotent by
+        source_id: if the source was already imported with byte-identical
+        content (same sha256, same rows), returns False and writes nothing.
+        If a stored row for the same source conflicts with the incoming one
+        (different sha256, label, population or membership), raises
+        ValidationError with a diagnostic and writes nothing -- a conflicting
+        re-import is never silently overwritten. All-or-nothing on any failure."""
+        ...
+
+    def get_research_source(self, source_id: str) -> ResearchSource | None: ...
+
+    def list_research_sources(self) -> list[ResearchSource]: ...
+
+    def list_technique_labels(self, source_id: str | None = None) -> list[TechniqueLabel]:
+        """Ordered by source_id, then source_row_number."""
+        ...
+
+    def record_research_populations(
+        self,
+        source: ResearchSource,
+        entries: list[tuple[ResearchPopulation, list[PopulationMembership]]],
+        renames: dict[str, str] | None = None,
+    ) -> bool:
+        """ONE transaction (schema v7): inserts `source` if absent, then each
+        population with its memberships, in list order (a candidate set
+        before the frontier derived from it). Per population:
+        - stored identically (fields + member set) -> nothing to do;
+        - absent -> inserted with its members;
+        - `renames[population_id]` names the stored row's EXPECTED former
+          name and the stored member set equals the incoming one -> the
+          population row is corrected in place (name, semantics, rule text,
+          role, provenance); membership rows are never rewritten;
+        - anything else (different members, unexpected stored name, name
+          taken by another population, differing source identity) ->
+          ValidationError, nothing written.
+        Returns False when nothing was written. All-or-nothing on any failure."""
+        ...
+
+    def get_research_population(self, name: str) -> ResearchPopulation | None: ...
+
+    def get_research_population_by_id(self, population_id: str) -> ResearchPopulation | None: ...
+
+    def list_research_populations(self) -> list[ResearchPopulation]:
+        """Ordered by name."""
+        ...
+
+    def list_population_memberships(self, population_id: str) -> list[PopulationMembership]:
+        """Ordered by source_ref."""
+        ...
+
+    # -- QCH schema v8: submitter-authored submission details --------------------
+
+    def record_submission_details(self, source: SubmissionDetailSource, details: list[SubmissionSourceDetail]) -> int:
+        """ONE transaction: inserts the source body record and every detail
+        row read from it; returns the number of detail rows inserted.
+        Idempotent by detail_source_id: if that body was already imported
+        with identical rows (import timestamps aside), returns 0 and writes
+        nothing. If any stored row differs from the incoming one, or a row is
+        missing/extra, raises ValidationError and writes nothing -- stored
+        source text is never overwritten. All-or-nothing on any failure."""
+        ...
+
+    def get_submission_detail_source(self, detail_source_id: str) -> SubmissionDetailSource | None: ...
+
+    def list_submission_detail_sources(self) -> list[SubmissionDetailSource]:
+        """Ordered by fetched_at, then detail_source_id."""
+        ...
+
+    def list_submission_source_details(
+        self, *, submission_id: str | None = None, source_submission_uuid: str | None = None, detail_source_id: str | None = None
+    ) -> list[SubmissionSourceDetail]:
+        """Filtered by whichever arguments are given; ordered by
+        source_fetched_at, detail_source_id, source_record_index."""
+        ...
+
+    def latest_submission_source_detail(self, submission_id: str) -> SubmissionSourceDetail | None:
+        """The row from the body with the greatest source_fetched_at (ties:
+        greater detail_source_id) -- the view submission_source_detail_latest."""
         ...
