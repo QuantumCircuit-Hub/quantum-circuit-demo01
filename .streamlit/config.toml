@@ -2,7 +2,17 @@
 # The public sidebar is rendered by src/qch_navigation.py.
 # pages/circuit_detail.py stays routable but unlisted.
 showSidebarNavigation = false
-toolbarMode = "viewer"
+# Keep the public UI focused and prevent viewer-selected dark themes.
+toolbarMode = "minimal"
+
+[theme]
+# QCH is intentionally light-only so the research views retain a consistent
+# reading and visualization surface on every device.
+base = "light"
+primaryColor = "#0969da"
+backgroundColor = "#ffffff"
+secondaryBackgroundColor = "#f6f8fa"
+textColor = "#1f2328"
 
 [server]
 headless = true
