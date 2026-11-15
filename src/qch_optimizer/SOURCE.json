@@ -1,0 +1,11 @@
+{
+  "source_repository": "https://github.com/JiahengLu-CS/qch-database",
+  "source_package": "src/qch",
+  "source_commit": "393a31c5e587eb3dd7ed47e1bec54eef74b8bdfe",
+  "note": "Byte-identical copies of qch.optimization, qch.objectives and qch.optimize. Do not edit here; change qch-database and copy again, then update the hashes and source_commit.",
+  "files": {
+    "optimization.py": "0aaae0e3af7262c2eb844db7d33db3ef941ef23a5fff4c44f6d0c74194dc0f3d",
+    "objectives.py": "17cbf650dec2215c446773f86f846feb703ec8236351dbe99224d59d2ef7b4d9",
+    "optimize.py": "e5e4b82bc62b12657060b87eb82719da5ebb953cb0be714c425c1fc363345970"
+  }
+}

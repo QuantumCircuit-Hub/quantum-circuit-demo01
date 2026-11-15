@@ -286,7 +286,7 @@ def minimal_app(tmp_path, datasets: dict[str, object]) -> Path:
     (root / "pages").mkdir(parents=True)
     (root / "src").mkdir()
     (root / "app.py").write_text("import streamlit as st\nst.write('home')\n", encoding="utf-8")
-    for stub in ("Ask_QCH.py", "Version_Evolution_Explorer.py"):
+    for stub in ("Ask_QCH.py", "Version_Evolution_Explorer.py", "Optimize_Circuit.py"):
         (root / "pages" / stub).write_text("", encoding="utf-8")
     shutil.copy(PROJECT_ROOT / PAGE, root / PAGE)
     shutil.copy(PROJECT_ROOT / "src" / "qch_navigation.py", root / "src" / "qch_navigation.py")

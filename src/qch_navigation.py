@@ -15,6 +15,7 @@ MAIN_PAGE_TITLE = "Multi-Version Circuit Explorer"
 ASK_PAGE_TITLE = "Ask QCH with Natural Language"
 EXPLORER_PAGE_TITLE = "Version Evolution Explorer"
 OPTIMIZATION_PAGE_TITLE = "Optimization Results"
+OPTIMIZE_PAGE_TITLE = "Optimize Your Circuit"
 
 
 def render_main_navigation() -> None:
@@ -23,4 +24,5 @@ def render_main_navigation() -> None:
         st.page_link("pages/Ask_QCH.py", label=ASK_PAGE_TITLE, icon=":material/chat:")
         st.page_link("pages/Version_Evolution_Explorer.py", label=EXPLORER_PAGE_TITLE, icon=":material/hub:")
         st.page_link("pages/Optimization_Results.py", label=OPTIMIZATION_PAGE_TITLE, icon=":material/tune:")
+        st.page_link("pages/Optimize_Circuit.py", label=OPTIMIZE_PAGE_TITLE, icon=":material/auto_fix_high:")
         st.divider()
