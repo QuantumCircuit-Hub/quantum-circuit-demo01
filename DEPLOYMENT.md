@@ -3,7 +3,8 @@
 ## Application
 
 - Entry point: `app.py`
-- Public pages include Multi-Version Circuit Explorer, Ask QCH with Natural Language, and Version Evolution Explorer.
+- Public pages include Multi-Version Circuit Explorer, Ask QCH with Natural Language, Version Evolution Explorer, and Optimization Results.
+- Optimization Results reads the Git-tracked datasets `data/optimization/stage2d_abc.json` and `data/optimization/stage2g_abcfg.json`.
 - Runtime dependencies are defined in `requirements.txt`.
 - The application uses the Git-tracked SQLite database at `data/qch_ecdsa_p17.sqlite3`.
 

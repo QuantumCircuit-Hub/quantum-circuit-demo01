@@ -14,6 +14,7 @@ import streamlit as st
 MAIN_PAGE_TITLE = "Multi-Version Circuit Explorer"
 ASK_PAGE_TITLE = "Ask QCH with Natural Language"
 EXPLORER_PAGE_TITLE = "Version Evolution Explorer"
+OPTIMIZATION_PAGE_TITLE = "Optimization Results"
 
 
 def render_main_navigation() -> None:
@@ -21,4 +22,5 @@ def render_main_navigation() -> None:
         st.page_link("app.py", label=MAIN_PAGE_TITLE, icon=":material/account_tree:")
         st.page_link("pages/Ask_QCH.py", label=ASK_PAGE_TITLE, icon=":material/chat:")
         st.page_link("pages/Version_Evolution_Explorer.py", label=EXPLORER_PAGE_TITLE, icon=":material/hub:")
+        st.page_link("pages/Optimization_Results.py", label=OPTIMIZATION_PAGE_TITLE, icon=":material/tune:")
         st.divider()
