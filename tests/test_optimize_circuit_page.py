@@ -141,8 +141,10 @@ def test_objective_pass_set_and_search_options():
      "after the measurement"),
     ("OPENQASM 2.0;\ninclude \"qelib1.inc\";\nqreg q[1];\n" + "x q[0];\n" * 3001, "at most 3000 operations"),
     ("x" * 200_001, "larger than"),
-])
+], ids=["parse-error", "too-many-qubits", "mid-circuit-measurement", "too-many-operations", "text-too-large"])
 def test_invalid_or_too_large_circuits_show_an_error(qasm, message):
+    # Short ids: pytest puts the test id into PYTEST_CURRENT_TEST, and Windows limits
+    # environment variables to 32767 characters.
     at = optimize(open_page(), qasm)
     assert at.error and message in at.error[0].value
     assert not at.metric
