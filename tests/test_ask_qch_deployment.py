@@ -126,4 +126,6 @@ def test_requirements_declare_every_runtime_import():
     names = {line.split("==")[0].strip().lower() for line in (PROJECT_ROOT / "requirements.txt").read_text(encoding="utf-8").splitlines()
              if line.strip() and not line.startswith("#")}
     assert {"streamlit", "networkx", "pandas", "requests"} <= names
-    assert not names & {"qiskit", "mqt.bench", "matplotlib", "zstandard", "ollama"}
+    # qiskit is a runtime dependency since the Optimize Your Circuit page (it runs src/qch_optimizer/).
+    assert "qiskit" in names
+    assert not names & {"mqt.bench", "matplotlib", "zstandard", "ollama"}

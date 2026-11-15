@@ -1,9 +1,12 @@
 # Runtime dependencies for the DEPLOYED Streamlit app (app.py) only.
 #
-# The app reads pre-generated JSON files under data/ and never calls
-# qiskit or mqt-bench at runtime -- it only needs streamlit (the UI) and
+# Most pages read pre-generated JSON files under data/ and never call
+# qiskit or mqt-bench at runtime; they need streamlit (the UI) and
 # networkx (to model the evolution graph, e.g. topological sort and
-# generation layout). Kept intentionally minimal, with transitive
+# generation layout). The "Optimize Your Circuit" page runs the vendored
+# optimizer in src/qch_optimizer/ and therefore needs qiskit at runtime
+# (pinned to the version the optimizer was verified with; numpy arrives as
+# a qiskit dependency). Kept intentionally minimal, with transitive
 # dependencies left unpinned so pip can resolve them fresh for whatever
 # platform is deploying (e.g. Streamlit Community Cloud's Linux
 # environment) -- a large list of exact pins for a different platform
@@ -19,3 +22,5 @@ networkx==3.6.1
 # declared explicitly at the versions tested locally with Python 3.11.
 pandas==3.0.5
 requests==2.34.2
+# Used by pages/Optimize_Circuit.py through src/qch_optimizer/.
+qiskit==2.5.2

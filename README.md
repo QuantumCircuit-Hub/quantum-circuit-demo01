@@ -87,6 +87,16 @@ reads only the JSON datasets in `data/optimization/`, exported read-only
 from the `qch-database` experiments. See
 [`docs/QCH_OPTIMIZATION_RESULTS.md`](docs/QCH_OPTIMIZATION_RESULTS.md).
 
+## Optimize Your Circuit
+
+The **Optimize Your Circuit** page takes an OpenQASM 2 circuit (pasted or
+uploaded), runs Qiskit optimization passes in many orders, verifies every
+result and returns the best circuit (default objective: two-qubit gates,
+then depth, then total gates), with downloads of the circuit and a report.
+It uses the optimizer vendored from `qch-database` in `src/qch_optimizer/`
+and needs `qiskit` at runtime. See
+[`docs/QCH_OPTIMIZE_PAGE.md`](docs/QCH_OPTIMIZE_PAGE.md).
+
 ## Layout
 
 - `data/raw` — unmodified input data (e.g. downloaded MQT Bench circuits)
