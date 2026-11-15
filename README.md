@@ -76,6 +76,17 @@ graph, lets you expand them interactively, and shows version and edge details
 separate evidence). It opens the database read-only. See
 [`docs/QCH_VERSION_EVOLUTION_EXPLORER.md`](docs/QCH_VERSION_EVOLUTION_EXPLORER.md).
 
+## Optimization Results
+
+The **Optimization Results** page compares saved Qiskit pass orders on 12
+MQT Bench circuits: three passes (6 orders) and five passes including
+two-qubit block re-synthesis (120 orders). It shows the best orders per
+objective (total gates, two-qubit gates, depth, Pareto front), the metrics
+after every pass of a selected run, and an overview of all circuits. It
+reads only the JSON datasets in `data/optimization/`, exported read-only
+from the `qch-database` experiments. See
+[`docs/QCH_OPTIMIZATION_RESULTS.md`](docs/QCH_OPTIMIZATION_RESULTS.md).
+
 ## Layout
 
 - `data/raw` — unmodified input data (e.g. downloaded MQT Bench circuits)
