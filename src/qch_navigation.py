@@ -19,6 +19,13 @@ OPTIMIZE_PAGE_TITLE = "Optimize Your Circuit"
 
 
 def render_main_navigation() -> None:
+    # Community Cloud retains its viewer menu even with toolbarMode="minimal".
+    # Hiding it keeps the public QCH demo in its configured light-only theme.
+    st.markdown(
+        '<style>button[data-testid="stMainMenuButton"] { display: none; }</style>',
+        unsafe_allow_html=True,
+    )
+
     with st.sidebar:
         st.page_link("app.py", label=MAIN_PAGE_TITLE, icon=":material/account_tree:")
         st.page_link("pages/Ask_QCH.py", label=ASK_PAGE_TITLE, icon=":material/chat:")
